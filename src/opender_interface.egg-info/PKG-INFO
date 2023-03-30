@@ -1,0 +1,52 @@
+Metadata-Version: 2.1
+Name: opender-interface
+Version: 0.0.0
+Summary: Interface to OpenDER
+Author: Yiwei Ma, Paulo Radatz, Wei Ren
+Author-email: yma@epri.com, pradatz@epri.com, wren@epric.om
+License: DECIDE later
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Topic :: Utilities
+Requires-Python: >=3.7
+Provides-Extra: dev
+
+=================
+OpenDER interface
+=================
+
+This project includes simulation interfaces for `OpenDER <https://github.com/epri-dev/opender/>`__ model, including:
+
+* Connecting OpenDER to OpenDSS for circuit simulation
+* Plot time series chart
+* Plot steady-state charts, including voltage-reactive power, active power-reactive power, frequency-active power, etc
+
+More features and documentations are in development.
+
+**Users are encouraged and expected to make changes to the released package for their usage.**
+
+To install the package:
+=======================
+Type the following command in the project directory
+
+``pip install -e ./``
+
+This will install all dependent
+
+
+Examples:
+=========
+* volt-var: demonstrate plotting capabilities
+* OpenDSS_34bus - dynamic simulation: interactions between voltage regulators and DER enter service performance
+* OpenDSS_34bus - steady state simulation: comparison between OpenDSS internal inverter model vs OpenDER
+* OpenDSS_GFOV: dynamic simulation of a ground fault over voltage
+
+
+Changelog
+=========
+
+0.0.0 (2023-03)
+------------------
+* Preliminary version

@@ -1,0 +1,6 @@
+numpy
+opender>=2.0.0
+py-dss-interface
+matplotlib
+pandas
+openpyxl

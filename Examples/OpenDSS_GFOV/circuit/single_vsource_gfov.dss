@@ -1,0 +1,29 @@
+Clear
+
+New Circuit.ckt1 pu=1.026  r1=0.0  x1=0.001  r0=0.0 x0=0.001  bus1= sub_src basekv = 12
+
+//New line.line1 bus1=sub_src.1  bus2=load.1  r1=0.5648  x1=2.8241  r0=0.5648  x0=2.8241  phases=1  enabled=true
+//New line.line11 bus1=sub_src.2.3  bus2=load.2.3  r1=0.5648  x1=2.8241  r0=0.5648  x0=2.8241  phases=2  enabled=true
+
+New line.line1 bus1=sub_src  bus2=load  r1=0.5648  x1=282.41  r0=0.5648  x0=282.41  phases=3  enabled=true
+New line.line2 bus1=load     bus2=der_h   r1=0.5648  x1=282.41  r0=0.5648  x0=282.41  phases=3  enabled=true
+
+//New Generator.PV1 Bus1=der Phases=3, Conn=Wye Model=4 kV=12 kW=0 kvar=0 maxkvar=5000.0 minkvar=5000.0
+New load.load1 Bus1= load.1.2.3 Phases=3 Conn=Delta kV= 12 kW= 100.0 kVAR= 0.0 vlowpu=0.1 vmaxpu=20 model=2
+//New isource.PV1 Bus1=der.1.2.3 Phases=3, amps=21.65,
+//New PVSystem.PV1 Bus1=der.1.2.3 Phases=3, kV=12 Pmpp=100 kVA=100 kvar=0 irradiance=1 kvarMax=44.0 kvarMaxAbs=-44.0 PFpriority=Yes, vminpu=0.1, %cutin=0.00001, %cutout=0.0000001
+
+new transformer.reg1a phases=3 windings=2 buses=(der_h.1.2.3, der_l.1.2.3) conns='delta wye' kvs="12 12" kvas="20000 20000" XHL=1
+New vsource.PV1_a Bus1=der_l.1 Phases=1, basekV=12, baseMVA=0.1, pu=0.6, r1=0  x1=1  r0=0 x0=1 angle = 0
+New vsource.PV1_b Bus1=der_l.2 Phases=1, basekV=12, baseMVA=0.1, pu=0.6, r1=0  x1=1  r0=0 x0=1 angle = -120
+New vsource.PV1_c Bus1=der_l.3 Phases=1, basekV=12, baseMVA=0.1, pu=0.6, r1=0  x1=1  r0=0 x0=1 angle = 120
+New fault.fault1 Bus1=load.1 phases=1, enabled=No, R=30
+Set voltagebases=[12,]
+
+//Set mode=dynamic
+Calcv
+
+compile
+solve
+
+

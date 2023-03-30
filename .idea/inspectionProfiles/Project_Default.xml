@@ -1,0 +1,45 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="21">
+            <item index="0" class="java.lang.String" itemvalue="six" />
+            <item index="1" class="java.lang.String" itemvalue="pytest" />
+            <item index="2" class="java.lang.String" itemvalue="iniconfig" />
+            <item index="3" class="java.lang.String" itemvalue="atomicwrites" />
+            <item index="4" class="java.lang.String" itemvalue="pluggy" />
+            <item index="5" class="java.lang.String" itemvalue="python-dateutil" />
+            <item index="6" class="java.lang.String" itemvalue="kiwisolver" />
+            <item index="7" class="java.lang.String" itemvalue="py" />
+            <item index="8" class="java.lang.String" itemvalue="packaging" />
+            <item index="9" class="java.lang.String" itemvalue="typing-extensions" />
+            <item index="10" class="java.lang.String" itemvalue="cycler" />
+            <item index="11" class="java.lang.String" itemvalue="numpy" />
+            <item index="12" class="java.lang.String" itemvalue="toml" />
+            <item index="13" class="java.lang.String" itemvalue="importlib-metadata" />
+            <item index="14" class="java.lang.String" itemvalue="attrs" />
+            <item index="15" class="java.lang.String" itemvalue="pandas" />
+            <item index="16" class="java.lang.String" itemvalue="zipp" />
+            <item index="17" class="java.lang.String" itemvalue="matplotlib" />
+            <item index="18" class="java.lang.String" itemvalue="pytz" />
+            <item index="19" class="java.lang.String" itemvalue="pyparsing" />
+            <item index="20" class="java.lang.String" itemvalue="Pillow" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="q_const_pf_desired_ref_kvar" />
+          <option value="const_pf_excitation_exec" />
+          <option value="const_pf_exec" />
+          <option value="CONST_PF_RT" />
+          <option value="q_const_pf_desired_kvar" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
