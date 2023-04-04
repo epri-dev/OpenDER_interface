@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pathlib
 import os
 from opender_interface.opendss_interface import OpenDSSInterface
-from opender_interface.opender_interface import DERModelInterface
+from opender_interface.opender_interface import OpenDERInterface
 
 
 #%%
@@ -58,32 +58,30 @@ cmd_list = [
     'Buscoords IEEE34_BusXY.csv',
     ]
 
-fdr = OpenDSSInterface(str(dss_file))
-fdr.cmd(cmd_list)
+ckt_int = OpenDERInterface(str(dss_file))
+ckt_int.ckt.cmd(cmd_list)
 
 
-fdr.initialize()
-fdr.init_PVSystems()
-
+ckt_int.initialize(DER_sim_type='PVSystem')
 
 def plot_voltage_profile(ax, data_label, data_color):
     for line in topology:
-        ax.plot([fdr.buses['distance'].loc[str(line[0])],
-                 fdr.buses['distance'].loc[str(line[1])]],
-                [fdr.buses[data_label].loc[str(line[0])],
-                 fdr.buses[data_label].loc[str(line[1])]], color=data_color)
+        ax.plot([ckt_int.ckt.buses['distance'].loc[str(line[0])],
+                 ckt_int.ckt.buses['distance'].loc[str(line[1])]],
+                [ckt_int.ckt.buses[data_label].loc[str(line[0])],
+                 ckt_int.ckt.buses[data_label].loc[str(line[1])]], color=data_color)
 
-    ax.scatter(fdr.buses['distance'], fdr.buses[data_label], label=data_label, color=data_color)
+    ax.scatter(ckt_int.ckt.buses['distance'], ckt_int.ckt.buses[data_label], label=data_label, color=data_color)
 
 
 scale = 1
-for i, PV in fdr.DERs.iterrows():
+for i, PV in ckt_int.ckt.DERs.iterrows():
     name = PV['name']
-    fdr.cmd(f'PVSystem.{name}.%Pmpp={scale*100}')
+    ckt_int.ckt.cmd(f'PVSystem.{name}.%Pmpp={scale * 100}')
 
-fdr.enable_control()
-fdr.solve_power_flow()
-fdr.read_sys_voltage()
+ckt_int.ckt.enable_control()
+ckt_int.solve_power_flow()
+ckt_int.read_sys_voltage()
 
 fig, ax = plt.subplots(2, 1,figsize=(10,5))
 
@@ -102,15 +100,15 @@ ax[0].set_title('OpenDSS')
 
 #%%
 # connect a DER to each bus
-der_interface = fdr.create_opender_objs(p_dc_pu=scale,
-                                   CONST_PF_MODE_ENABLE=True,
-                                   CONST_PF=0.9,
-                                   CONST_PF_EXCITATION='ABS')
+der_list = ckt_int.create_opender_objs(p_dc_pu=scale,
+                                            CONST_PF_MODE_ENABLE=True,
+                                            CONST_PF=0.9,
+                                            CONST_PF_EXCITATION='ABS')
 
 
 # run a load flow and check the feeder total power
 
-der_interface.der_convergence_process()
+ckt_int.der_convergence_process()
 
 #################
 

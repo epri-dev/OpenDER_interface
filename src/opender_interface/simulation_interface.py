@@ -36,10 +36,6 @@ class SimulationInterfacesABC(ABC):
         pass
 
     @abstractmethod
-    def create_opender_objs(self, p_dc_pu = 1, DER_sim_type = None, **kwargs):
-        pass
-
-    @abstractmethod
     def enable_control(self):
         pass
 

@@ -3,7 +3,7 @@ import os
 import pathlib
 import matplotlib.pyplot as plt
 from opender_interface.opendss_interface import OpenDSSInterface
-from opender_interface.opender_interface import DERModelInterface
+from opender_interface.opender_interface import OpenDERInterface
 from opender import DER
 from opender_interface.time_plots import TimePlots
 from opender_interface.xy_plot import XYPlots
@@ -32,30 +32,28 @@ circuit_folder = script_path.joinpath("circuit")
 dss_file = circuit_folder.joinpath("single_vsource_gfov.dss")
 
 # configure the dynamic simulation
-delt = 0.0001  # sampling time step (s)
+delt = 0.004  # sampling time step (s)
 
 
 # %%
-# run dss simulation
-dss = OpenDSSInterface(dss_file, tstep=delt)
-dss.initialize()
+# run ckt_int simulation
+ckt_int = OpenDERInterface(dss_file, t_s=delt)
+ckt_int.initialize(DER_sim_type='vsource',)
 
-der_list = dss.create_opender_objs(p_dc_pu=1,
-                                   DER_sim_type='vsource',
-                                   CONST_Q_MODE_ENABLE = True,
-                                   CONST_Q = 0,
-                                   NP_Q_CAPABILITY_LOW_P = 'SAME',
-                                   NP_ABNORMAL_OP_CAT = 'CAT_III'
-                                   )
+der_list = ckt_int.create_opender_objs(p_dc_pu=1,
+                                       CONST_Q_MODE_ENABLE = True,
+                                       CONST_Q = 0,
+                                       NP_Q_CAPABILITY_LOW_P = 'SAME',
+                                       NP_ABNORMAL_OP_CAT = 'CAT_II',
+                                       UV2_TRIP_T=2
+                                       )
 
-
-der_interface = DERModelInterface()
 
 DER.t_s=delt
 
 
-der_interface.der_convergence_process(dss)
-dss.solve_power_flow()
+ckt_int.der_convergence_process()
+ckt_int.solve_power_flow()
 
 # run time series simulation
 tsim = 0
@@ -73,52 +71,50 @@ while tsim < tend:
     # step reference / perturbation
 
     if tsim >= tevt1:
-        dss.cmd('fault.fault1.enabled=yes')
+        ckt_int.ckt.cmd('fault.fault1.enabled=yes')
     if tsim >= tevt2:
-        dss.cmd('open line.line1')
+        ckt_int.ckt.cmd('open line.line1')
 
-    dss.set_source_voltage(vsub)
+    ckt_int.run()
 
-    der_interface.run()
+    ckt_int.update_der_output_powers(der_list)
 
-    dss.update_der_output_powers(der_list)
+    ckt_int.solve_power_flow()
+    ckt_int.read_line_flow()
 
-    dss.solve_power_flow()
-    dss.read_line_flow()
-
-    print(tsim, dss.dss.bus_pu_voltages(), (dss.lines[['flowS_A', 'flowS_B', 'flowS_C']])) #,'flowS_A', 'flowS_B', 'flowS_C'
+    print(tsim, ckt_int.ckt.dss.bus_pu_voltages(), (ckt_int.ckt.lines[['flowS_A', 'flowS_B', 'flowS_C']])) #,'flowS_A', 'flowS_B', 'flowS_C'
     # log result
     plot_obj.add_to_traces(
         {
-            # 'v': sum(list(dss.buses.loc['load', ['Vpu_A', 'Vpu_B', 'Vpu_C']]))/3
-            'v_a': dss.buses.loc['der_h', ['Vpu_A']],
-            'v_b': dss.buses.loc['der_h', ['Vpu_B']],
-            'v_c': dss.buses.loc['der_h', ['Vpu_C']],
+            # 'v': sum(list(ckt_int.buses.loc['load', ['Vpu_A', 'Vpu_B', 'Vpu_C']]))/3
+            'v_a': ckt_int.ckt.buses.loc['der_h', ['Vpu_A']],
+            'v_b': ckt_int.ckt.buses.loc['der_h', ['Vpu_B']],
+            'v_c': ckt_int.ckt.buses.loc['der_h', ['Vpu_C']],
         },
         {
-            # 'v': sum(list(dss.buses.loc['load', ['Vpu_A', 'Vpu_B', 'Vpu_C']]))/3
-            'v_a': dss.buses.loc['der_l', ['Vpu_A']],
-            'v_b': dss.buses.loc['der_l', ['Vpu_B']],
-            'v_c': dss.buses.loc['der_l', ['Vpu_C']],
+            # 'v': sum(list(ckt_int.buses.loc['load', ['Vpu_A', 'Vpu_B', 'Vpu_C']]))/3
+            'v_a': ckt_int.ckt.buses.loc['der_l', ['Vpu_A']],
+            'v_b': ckt_int.ckt.buses.loc['der_l', ['Vpu_B']],
+            'v_c': ckt_int.ckt.buses.loc['der_l', ['Vpu_C']],
         },
 
         {
             'p_pu (DER)': der_list[0].p_out_pu,
-            # 'p_kw_grid': -sum(dss.dss.cktelement_powers()[0:5:2])
-            'p_pu (Grid)': sum(list(dss.lines.iloc[0][['flowS_A', 'flowS_B', 'flowS_C']])).real / 100
+            # 'p_kw_grid': -sum(ckt_int.ckt_int.cktelement_powers()[0:5:2])
+            'p_pu (Grid)': sum(list(ckt_int.ckt.lines.iloc[0][['flowS_A', 'flowS_B', 'flowS_C']])).real / 100
         },
     )
     # step tsim
-    dss.read_sys_voltage()
+    ckt_int.read_sys_voltage()
     tsim = tsim + delt
 
 plot_obj.prepare()
 plot_obj.show()
 
-v_plt_derh.prepare_v3_plot(xy=dss.buses.loc['der_h', ['Vpu_A','Vpu_B','Vpu_C','Theta_A','Theta_B','Theta_C']])
+v_plt_derh.prepare_v3_plot(xy=ckt_int.ckt.buses.loc['der_h', ['Vpu_A', 'Vpu_B', 'Vpu_C', 'Theta_A', 'Theta_B', 'Theta_C']])
 v_plt_derh.save_fig('derh1')
 v_plt_derh.show()
-v_plt_derl.prepare_v3_plot(xy=dss.buses.loc['der_l', ['Vpu_A','Vpu_B','Vpu_C','Theta_A','Theta_B','Theta_C']], l2l=True)
+v_plt_derl.prepare_v3_plot(xy=ckt_int.ckt.buses.loc['der_l', ['Vpu_A', 'Vpu_B', 'Vpu_C', 'Theta_A', 'Theta_B', 'Theta_C']], l2l=True)
 print(der_list[0].der_input)
 v_plt_derl.save_fig('derl1')
 v_plt_derl.show()

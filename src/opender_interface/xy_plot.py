@@ -520,11 +520,11 @@ class XYPlots:
 
 
         # Hide grid lines
-        self.ax_v3 .grid(False)
+        self.ax_v3.grid(False)
 
         # Hide axes ticks
-        self.ax_v3 .set_xticks([])
-        self.ax_v3 .set_yticks([])
+        self.ax_v3.set_xticks([])
+        self.ax_v3.set_yticks([])
 
         self.ax_v3.set_xlim(-max(x_a, x_b, x_c, y_a, y_b, y_c)*2, max(x_a, x_b, x_c, y_a, y_b, y_c)*2)
         self.ax_v3.set_ylim(-max(x_a, x_b, x_c,y_a, y_b, y_c)*2, max(x_a, x_b, x_c, y_a, y_b, y_c)*2)

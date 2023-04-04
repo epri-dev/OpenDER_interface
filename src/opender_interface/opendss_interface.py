@@ -2,10 +2,9 @@ import py_dss_interface
 import numpy as np
 import pandas as pd
 import cmath
-from .simulation_interface import SimulationInterfacesABC
+from opender_interface.simulation_interface import SimulationInterfacesABC
 from opender.der import DER
 from .voltage_regulator import VR_Model
-from .opender_interface import DERModelInterface
 
 class OpenDSSInterface(SimulationInterfacesABC):
 
@@ -29,13 +28,24 @@ class OpenDSSInterface(SimulationInterfacesABC):
             raise ValueError("OpenDSS Initializing cmd_list is not valid")
 
 
-    def initialize(self):
+    def initialize(self, DER_sim_type = 'PVSystem'):
         self.init_buses()
         self.init_lines()
         self.init_loads()
         self.init_generators()
-
+        self.init_PVSystems()
         self.init_vr()
+        self.DER_sim_type = DER_sim_type
+
+        if DER_sim_type == 'PVSystem':
+            self.init_PVSystems()
+            self.DER_sim_type = 'PVSystem'
+        if DER_sim_type == 'isource':
+            self.init_isources()
+            self.DER_sim_type = 'isource'
+        if DER_sim_type == 'vsource':
+            self.init_vsources()
+            self.DER_sim_type = 'vsource'
 
     def init_buses(self):
         nodenames = list(self.dss.circuit_all_node_names())
@@ -164,7 +174,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
         for PVname in PVnames:
             self.dss.pvsystems_write_name(PVname)
             kw = self.dss.pvsystems_read_pmpp()
-            # kvar = self.dss.pvsystems_read_kvar() #TODO check with Paulo, seems that it always get 0
+            # kvar = self.ckt_int.pvsystems_read_kvar() #TODO check with Paulo, seems that it always get 0
             kVA = self.dss.pvsystems_read_kva_rated()
             bus = self.dss.text(f'? PVSystem.{PVname}.bus1')
             kvar = float(self.dss.text(f'? PVSystem.{PVname}.kvarmax'))
@@ -193,11 +203,11 @@ class OpenDSSInterface(SimulationInterfacesABC):
         PVnames = [*set(PVnames)]
         for PVname in PVnames:
             self.dss.isources_write_name(f'{PVname}_a')
-            # kw = self.dss.pvsystems_read_pmpp()
-            # kVA = self.dss.pvsystems_read_kva_rated()
+            # kw = self.ckt_int.pvsystems_read_pmpp()
+            # kVA = self.ckt_int.pvsystems_read_kva_rated()
             bus = self.dss.text(f'? isource.{PVname}_a.bus1')
-            # kvar = float(self.dss.text(f'? PVSystem.{PVname}.kvarmax'))
-            # kvarabs = float(self.dss.text(f'? PVSystem.{PVname}.kvarmaxabs'))
+            # kvar = float(self.ckt_int.text(f'? PVSystem.{PVname}.kvarmax'))
+            # kvarabs = float(self.ckt_int.text(f'? PVSystem.{PVname}.kvarmaxabs'))
             self.dss.circuit_set_active_bus(bus)
             kV = self.dss.bus_kv_base() * 1.7320508075688 #TODO make sure this is correct
 
@@ -227,8 +237,8 @@ class OpenDSSInterface(SimulationInterfacesABC):
             kw = float(self.dss.text(f'? vsource.{PVname}_a.baseMVA')) * 1000
             kVA = float(self.dss.text(f'? vsource.{PVname}_a.baseMVA')) * 1000
             bus = self.dss.text(f'? vsource.{PVname}_a.bus1')
-            # kvar = float(self.dss.text(f'? PVSystem.{PVname}.kvarmax'))
-            # kvarabs = float(self.dss.text(f'? PVSystem.{PVname}.kvarmaxabs'))
+            # kvar = float(self.ckt_int.text(f'? PVSystem.{PVname}.kvarmax'))
+            # kvarabs = float(self.ckt_int.text(f'? PVSystem.{PVname}.kvarmaxabs'))
             self.dss.circuit_set_active_bus(bus)
             kV = self.dss.bus_kv_base() * 1.7320508075688 #TODO make sure this is correct
             R = 0.001 * kV * kV / kw * 1000
@@ -273,9 +283,6 @@ class OpenDSSInterface(SimulationInterfacesABC):
     # update DER output P/Q to circuit simulation
     def update_der_output_powers(self, der_list=None, p_list=None, q_list=None):
 
-        if der_list is None:
-            der_list = self.der_interface.der_objs
-
         if p_list is not None and (self.DER_sim_type == 'isource' or self.DER_sim_type == 'vsource'):
             for der_obj, p, q in zip(der_list, p_list, q_list):
                 p_pu = p *1000 / der_obj.der_file.NP_VA_MAX
@@ -315,7 +322,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
                 self.cmd(f'{self.DER_sim_type}.{name}_b.angle={theta_b * 57.29577951308232}')
                 self.cmd(f'{self.DER_sim_type}.{name}_c.angle={theta_c * 57.29577951308232}')
 
-        # self.dss.text(f"edit generator.{self.dss.generators_read_name()} "
+        # self.ckt_int.text(f"edit generator.{self.ckt_int.generators_read_name()} "
         #               f"kw={p_out_kw} "
         #               f"kvar={q_out_kvar}")
 
@@ -376,21 +383,6 @@ class OpenDSSInterface(SimulationInterfacesABC):
     def set_source_voltage(self, v_pu: float) -> None:
         self.dss.vsources_write_pu(v_pu)
 
-    def create_opender_objs(self, p_dc_pu = 1, DER_sim_type = 'PVSystem', **kwargs):
-        der_list = []
-        if DER_sim_type == 'PVSystem':
-            self.init_PVSystems()
-            self.DER_sim_type = 'PVSystem'
-        if DER_sim_type == 'isource':
-            self.init_isources()
-            self.DER_sim_type = 'isource'
-        if DER_sim_type == 'vsource':
-            self.init_vsources()
-            self.DER_sim_type = 'vsource'
-
-        self.der_interface = DERModelInterface(self, p_dc_pu, **kwargs)
-
-        return self.der_interface
 
     def init_vr(self):
         self.vrStates = []
