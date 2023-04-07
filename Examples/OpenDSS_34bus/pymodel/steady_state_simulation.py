@@ -3,6 +3,7 @@ import pathlib
 import os
 from opender_interface.opendss_interface import OpenDSSInterface
 from opender_interface.opender_interface import OpenDERInterface
+from opender import DERCommonFileFormat
 
 
 #%%
@@ -50,16 +51,8 @@ topology = [
     [836, 862],
     [862, 838]
 ]
-# compile circuit, add an energy meter, solve, and import bus coordinate
-# this will force opendss to generate bus distance information
-cmd_list = [
-    'new energymeter.Meter element=line.L1 terminal=1',
-    'solve',
-    'Buscoords IEEE34_BusXY.csv',
-    ]
 
 ckt_int = OpenDERInterface(str(dss_file))
-ckt_int.ckt.cmd(cmd_list)
 
 
 ckt_int.initialize(DER_sim_type='PVSystem')
@@ -77,9 +70,9 @@ def plot_voltage_profile(ax, data_label, data_color):
 scale = 1
 for i, PV in ckt_int.ckt.DERs.iterrows():
     name = PV['name']
-    ckt_int.ckt.cmd(f'PVSystem.{name}.%Pmpp={scale * 100}')
+    ckt_int.dss.text(f'PVSystem.{name}.%Pmpp={scale * 100}')
 
-ckt_int.ckt.enable_control()
+ckt_int.enable_control()
 ckt_int.solve_power_flow()
 ckt_int.read_sys_voltage()
 
@@ -100,10 +93,14 @@ ax[0].set_title('OpenDSS')
 
 #%%
 # connect a DER to each bus
-der_list = ckt_int.create_opender_objs(p_dc_pu=scale,
-                                            CONST_PF_MODE_ENABLE=True,
-                                            CONST_PF=0.9,
-                                            CONST_PF_EXCITATION='ABS')
+der_file = DERCommonFileFormat(NP_VA_MAX=400000,
+                               NP_P_MAX=400000,
+                               NP_Q_MAX_INJ=176000,
+                               NP_Q_MAX_ABS=176000,
+                               CONST_PF_MODE_ENABLE=True,
+                               CONST_PF=0.9,
+                               CONST_PF_EXCITATION='ABS')
+der_list = ckt_int.create_opender_objs(der_file, p_pu=scale)
 
 
 # run a load flow and check the feeder total power

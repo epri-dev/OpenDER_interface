@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import cmath
 from opender_interface.simulation_interface import SimulationInterfacesABC
-from opender.der import DER
+from opender.der import DER, DERCommonFileFormat
 from .voltage_regulator import VR_Model
 
 class OpenDSSInterface(SimulationInterfacesABC):
@@ -33,7 +33,6 @@ class OpenDSSInterface(SimulationInterfacesABC):
         self.init_lines()
         self.init_loads()
         self.init_generators()
-        self.init_PVSystems()
         self.init_vr()
         self.DER_sim_type = DER_sim_type
 
@@ -46,6 +45,9 @@ class OpenDSSInterface(SimulationInterfacesABC):
         if DER_sim_type == 'vsource':
             self.init_vsources()
             self.DER_sim_type = 'vsource'
+        if DER_sim_type == 'generator':
+            self.DERs = self.generators
+            self.DER_sim_type = 'generator'
 
     def init_buses(self):
         nodenames = list(self.dss.circuit_all_node_names())
@@ -166,7 +168,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
             })
 
         self.generators = pd.DataFrame(gens)
-        # self.generators.set_index('name', inplace=True)
+        # self.DERs.set_index('name', inplace=True)
 
     def init_PVSystems(self):
         PVnames = list(self.dss.pvsystems_all_names())
@@ -237,24 +239,9 @@ class OpenDSSInterface(SimulationInterfacesABC):
             kw = float(self.dss.text(f'? vsource.{PVname}_a.baseMVA')) * 1000
             kVA = float(self.dss.text(f'? vsource.{PVname}_a.baseMVA')) * 1000
             bus = self.dss.text(f'? vsource.{PVname}_a.bus1')
-            # kvar = float(self.ckt_int.text(f'? PVSystem.{PVname}.kvarmax'))
-            # kvarabs = float(self.ckt_int.text(f'? PVSystem.{PVname}.kvarmaxabs'))
             self.dss.circuit_set_active_bus(bus)
             kV = self.dss.bus_kv_base() * 1.7320508075688 #TODO make sure this is correct
-            R = 0.001 * kV * kV / kw * 1000
-            X = 0.2 * kV * kV / kw * 1000
-            self.dss.text(f'vsource.{PVname}_a.R0 = {R}')
-            self.dss.text(f'vsource.{PVname}_a.R1 = {R}')
-            self.dss.text(f'vsource.{PVname}_a.X0 = {X}')
-            self.dss.text(f'vsource.{PVname}_a.X1 = {X}')
-            self.dss.text(f'vsource.{PVname}_b.R0 = {R}')
-            self.dss.text(f'vsource.{PVname}_b.R1 = {R}')
-            self.dss.text(f'vsource.{PVname}_b.X0 = {X}')
-            self.dss.text(f'vsource.{PVname}_b.X1 = {X}')
-            self.dss.text(f'vsource.{PVname}_c.R0 = {R}')
-            self.dss.text(f'vsource.{PVname}_c.R1 = {R}')
-            self.dss.text(f'vsource.{PVname}_c.X0 = {X}')
-            self.dss.text(f'vsource.{PVname}_c.X1 = {X}')
+
             this_type = 'vsource'
             PVs.append({  # TODO make consistent with CYMEInterface
                 'name': PVname,
@@ -270,6 +257,45 @@ class OpenDSSInterface(SimulationInterfacesABC):
 
         self.DERs = pd.DataFrame(PVs)
 
+    def update_der_info(self, name, der_obj):
+        if self.DER_sim_type == 'PVSystem':
+            self.dss.text(f'PVSystem.{name}.kVA = {der_obj.der_file.NP_VA_MAX / 1000}')
+            self.dss.text(f'PVSystem.{name}.Pmpp = {der_obj.der_file.NP_P_MAX / 1000}')
+            self.dss.text(f'PVSystem.{name}.kvarmax = {der_obj.der_file.NP_Q_MAX_ABS / 1000}')
+            self.dss.text(f'PVSystem.{name}.kvarmaxabs = {der_obj.der_file.NP_Q_MAX_INJ / 1000}')
+            #TODO update kV?
+
+        if self.DER_sim_type == 'isource':
+            pass
+
+        if self.DER_sim_type == 'vsource':
+            self.dss.vsources_write_name(f'{name}_a')
+            kVA = der_obj.der_file.NP_VA_MAX/1000
+            bus = self.dss.text(f'? vsource.{name}_a.bus1')
+            self.dss.circuit_set_active_bus(bus)
+
+            kV = self.dss.bus_kv_base() * 1.7320508075688 #TODO make sure this is correct
+            R = der_obj.der_file.NP_RESISTANCE * kV * kV / kVA * 1000
+            X = der_obj.der_file.NP_REACTANCE * kV * kV / kVA * 1000
+            self.dss.text(f'vsource.{name}_a.R0 = {R}')
+            self.dss.text(f'vsource.{name}_a.R1 = {R}')
+            self.dss.text(f'vsource.{name}_a.X0 = {X}')
+            self.dss.text(f'vsource.{name}_a.X1 = {X}')
+            self.dss.text(f'vsource.{name}_b.R0 = {R}')
+            self.dss.text(f'vsource.{name}_b.R1 = {R}')
+            self.dss.text(f'vsource.{name}_b.X0 = {X}')
+            self.dss.text(f'vsource.{name}_b.X1 = {X}')
+            self.dss.text(f'vsource.{name}_c.R0 = {R}')
+            self.dss.text(f'vsource.{name}_c.R1 = {R}')
+            self.dss.text(f'vsource.{name}_c.X0 = {X}')
+            self.dss.text(f'vsource.{name}_c.X1 = {X}')
+            self.dss.text(f'vsource.{name}_c.baseMVA = {kVA/1000}')
+
+        if self.DER_sim_type == 'generator':
+            self.dss.text(f'generator.{name}.kVA = {der_obj.der_file.NP_VA_MAX / 1000}')
+            self.dss.text(f'generator.{name}.Pmpp = {der_obj.der_file.NP_P_MAX / 1000}')
+            self.dss.text(f'generator.{name}.kvarmax = {der_obj.der_file.NP_Q_MAX_ABS / 1000}')
+            self.dss.text(f'generator.{name}.kvarmaxabs = {der_obj.der_file.NP_Q_MAX_INJ / 1000}')
 
     def load_scaling(self, mult=1.0):
         # scale load
@@ -302,6 +328,10 @@ class OpenDSSInterface(SimulationInterfacesABC):
             if self.DER_sim_type == 'PVSystem':
                 self.cmd(f'{self.DER_sim_type}.{name}.Pmpp={P_gen}')
                 self.cmd(f'{self.DER_sim_type}.{name}.kvar={Q_gen}')
+            if self.DER_sim_type == 'generator':
+                self.cmd(f'{self.DER_sim_type}.{name}.kW={P_gen}')
+                self.cmd(f'{self.DER_sim_type}.{name}.kvar={Q_gen}')
+
             if self.DER_sim_type == 'isource':
                 (ia, ib, ic), (theta_a, theta_b, theta_c) = der_obj.get_der_output(output='I_A')
 

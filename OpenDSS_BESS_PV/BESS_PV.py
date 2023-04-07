@@ -4,20 +4,35 @@ import pathlib
 import matplotlib.pyplot as plt
 from opender_interface.opendss_interface import OpenDSSInterface
 from opender_interface.opender_interface import OpenDERInterface
-from opender import DER, DERCommonFileFormat
+from opender import DER
 from opender_interface.time_plots import TimePlots
 from opender_interface.xy_plot import XYPlots
 
+# %%
+# parameter calculation
+vbase = 12
+sbase = 5
+xor = 5
+zpu = 0.1
+
+
+# line impedance
+zbase = vbase ** 2 / sbase
+rpu = zpu / np.sqrt(1 + xor ** 2)
+xpu = rpu * xor
+#
+rohms = rpu * zbase
+xohms = xpu * zbase
 
 # substation initial voltage
 vsub0 = 1.03
 
 script_path = pathlib.Path(os.path.dirname(__file__))
-circuit_folder = script_path.joinpath("circuit")
-dss_file = circuit_folder.joinpath("single_vsource_gfov.dss")
+circuit_folder = script_path
+dss_file = circuit_folder.joinpath("dss_BESS_PV.dss")
 
 # configure the dynamic simulation
-delt = 0.0004wor  # sampling time step (s)
+delt = 60 * 15  # sampling time step (s)
 
 
 # %%
@@ -25,17 +40,13 @@ delt = 0.0004wor  # sampling time step (s)
 ckt_int = OpenDERInterface(dss_file, t_s=delt)
 ckt_int.initialize(DER_sim_type='vsource',)
 
-der_file = DERCommonFileFormat(NP_VA_MAX=100000,
-                               NP_P_MAX=100000,
-                               NP_Q_MAX_INJ=44000,
-                               NP_Q_MAX_ABS=44000,
-                               CONST_Q_MODE_ENABLE = True,
-                               CONST_Q = 0,
-                               NP_Q_CAPABILITY_LOW_P = 'SAME',
-                               NP_ABNORMAL_OP_CAT = 'CAT_II',
-                               UV2_TRIP_T = 2)
-
-der_list = ckt_int.create_opender_objs(p_pu=1, der_files=der_file)
+der_list = ckt_int.create_opender_objs(p_dc_pu=1,
+                                       CONST_Q_MODE_ENABLE = True,
+                                       CONST_Q = 0,
+                                       NP_Q_CAPABILITY_LOW_P = 'SAME',
+                                       NP_ABNORMAL_OP_CAT = 'CAT_II',
+                                       UV2_TRIP_T=2
+                                       )
 
 
 DER.t_s=delt

@@ -15,60 +15,6 @@ from opender import DER, DERCommonFileFormat
 from opender_interface.time_plots import TimePlots
 from opender_interface.xy_plot import XYPlots
 
-# %%
-# parameter calculation
-vbase = 12
-sbase = 5
-xor = 5
-zpu = 0.1
-# zpu = 0.3
-# zpu = 0.12  #*4/5
-
-# line impedance
-zbase = vbase ** 2 / sbase
-rpu = zpu / np.sqrt(1 + xor ** 2)
-xpu = rpu * xor
-#
-rohms = rpu * zbase
-xohms = xpu * zbase
-
-# substation initial voltage
-vsub0 = 1.026
-# vsub0 = 1.06 #1.0415
-# vsub0 = 1.025
-
-
-# # %%
-# # ckt_int file creation
-# filepath = os.getcwd()
-# filename = 'single_PVSystem.ckt_int'
-# flines = [
-#     'Clear',
-#     '',
-#     # substation source
-#     'New Circuit.ckt1 pu={}  r1=0.0  x1=0.001  r0=0.0 x0=0.001  bus1= SUB_SRC basekv = {}'.format(vsub0, vbase),
-#     '',
-#     # line from substation to DER
-#     'New line.line1 bus1=SUB_SRC  bus2=DER  r1={:.4f}  x1={:.4f}  r0={:.4f}  x0={:.4f}  phases=3  enabled=true'.format(
-#         rohms, xohms, rohms, xohms),
-#     '',
-#     # PV generator connected to DER bus
-#     # 'New PVSystem.PV1  phases=3  bus1=DER  kV={}  kVA={:.1f}  %cutin=0.1 %cutout=0.1'.format(vbase, sbase * 1.e3),
-#     f'New Generator.PV1 Bus1=DER Phases=3, Conn=Wye Model=4 kV={vbase} kW=0 kvar=0 maxkvar={sbase*1.e3} minkvar={sbase*1.e3}'
-#
-#     '',
-#     # set voltage bases
-#     'Set voltagebases=[{},]'.format(vbase),
-#     'Calcv',
-#     '',
-#     # # solve the load flow
-#     # 'Solve',
-# ]
-#
-# fh = open('{}\\circuit\\{}'.format(filepath, filename), 'w')
-# for fline in flines:
-#     fh.write(fline + '\n')
-# fh.close()
 
 script_path = pathlib.Path(os.path.dirname(__file__))
 circuit_folder = script_path.joinpath("circuit")
@@ -84,16 +30,19 @@ delt = 0.001  # sampling time step (s)
 ckt_int = OpenDERInterface(dss_file, t_s=delt)
 ckt_int.initialize(DER_sim_type='isource')
 
+der_file = DERCommonFileFormat(NP_VA_MAX=100000,
+                               NP_P_MAX=100000,
+                               NP_Q_MAX_INJ=44000,
+                               NP_Q_MAX_ABS=44000,
+                               CONST_Q_MODE_ENABLE = True,
+                               CONST_Q = 0,
+                               NP_Q_CAPABILITY_LOW_P = 'SAME',
+                               NP_ABNORMAL_OP_CAT = 'CAT_II',
+                               UV2_TRIP_T = 2)
 
-der_list = ckt_int.create_opender_objs(p_dc_pu=1,
-                                       CONST_Q_MODE_ENABLE = True,
-                                       CONST_Q = 0,
-                                       NP_Q_CAPABILITY_LOW_P = 'SAME',
-                                       NP_ABNORMAL_OP_CAT = 'CAT_II',
-                                       UV2_TRIP_T = 2
-                                       )
+der_list = ckt_int.create_opender_objs(p_pu=1, der_files=der_file)
 
-DER.t_s=delt
+
 
 
 # cmdList = [
@@ -121,7 +70,7 @@ tevt1 = 0.2
 tevt2 = 0.4
 tend = 0.6  # total simulation time (s)
 
-vsub = vsub0
+vsub = 1.026
 plot_obj = TimePlots(3,1)
 v_plt_load = XYPlots(ckt_int.der_objs[0])
 v_plt_derh = XYPlots(ckt_int.der_objs[0])

@@ -1,7 +1,7 @@
-from opender import DER, DER_PV, DER_BESS
+from opender import DER, DER_PV, DER_BESS, DERCommonFileFormat, DERCommonFileFormatBESS
 from . import simulation_interface
 from opender_interface.opendss_interface import OpenDSSInterface
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Dict
 
 
 class OpenDERInterface:
@@ -13,48 +13,49 @@ class OpenDERInterface:
     def __init__(self, ckt_path, t_s=DER.t_s):
         if '.dss' in str(ckt_path):
             self.ckt = OpenDSSInterface(ckt_path)
+            self.dss = self.ckt.dss
         else:
             print('File path error!')
 
         self.der_objs = []
         self.t_s = t_s
         DER.t_s = t_s
+
     def initialize(self, DER_sim_type='PVSystem'):
         self.ckt.initialize(DER_sim_type)
-    def create_opender_objs(self, p_dc_pu, DERtypes='PV', **kwargs):
+    def create_opender_objs(self, der_files, p_pu):
 
-        if not isinstance(DERtypes, Union[List, Tuple]):
-            DERtypes = [DERtypes for der_obj in self.ckt.DERs.iterrows()]
-        if not isinstance(kwargs, Union[List, Tuple]):
-            kwargs = [kwargs for der_obj in self.ckt.DERs.iterrows()]
+        if isinstance(der_files, Union[DERCommonFileFormat, DERCommonFileFormatBESS]):
+            der_files= {der_obj[1]['name']: der_files for der_obj in self.ckt.DERs.iterrows()}
 
-        for (index, der_i), DERtype, setting in zip(self.ckt.DERs.iterrows(), DERtypes, kwargs):
-            if DERtype == 'PV':
-                der_obj = DER_PV()
-            else:
-                der_obj = DER_BESS()
 
-            der_obj.der_file.NP_VA_MAX = der_i['kVA'] * 1000
-            der_obj.der_file.NP_P_MAX = der_i['kw'] * 1000
-            der_obj.der_file.NP_Q_MAX_ABS = der_i['kvar'] * 1000
-            der_obj.der_file.NP_Q_MAX_INJ = der_i['kvarabs'] * 1000
-            der_obj.name = der_i['name']
-            der_obj.bus = der_i['bus']
-            der_obj.der_file.NP_V_DC = der_i['kV'] * 1500
-            der_obj.der_file.NP_AC_V_NOM = der_i['kV'] * 1000
+        for (index, der_i), setting in zip(self.ckt.DERs.iterrows(), der_files):
+            for name, der_file in der_files.items():
+                if name == der_i['name']:
+                    if 'PV' in der_i['name'].upper():
+                        der_obj = DER_PV(der_file)
+                    else:
+                        if not isinstance(der_file, DERCommonFileFormatBESS):
+                            der_file = DERCommonFileFormatBESS(convert=der_file)
+                        der_obj = DER_BESS(der_file)
 
-            DER.t_s = self.t_s
-            der_obj.update_der_input(p_dc_pu=p_dc_pu, f=60)
-            try:
-                for key, value in setting.items():
-                    setattr(der_obj.der_file, key, value)
-            except:
-                print('ERROR applying DER settings!')
+                    self.ckt.update_der_info(name, der_obj)
 
-            # der_obj.reinitialize()
+                    der_obj.name = der_i['name']
+                    der_obj.bus = der_i['bus']
+                    der_obj.der_file.NP_V_DC = der_i['kV'] * 1500
+                    der_obj.der_file.NP_AC_V_NOM = der_i['kV'] * 1000
 
-            # save the in the der_list(
-            self.der_objs.append(der_obj)
+                    DER.t_s = self.t_s
+                    if isinstance(der_obj, DER_BESS):
+                        der_obj.update_der_input(p_dem_pu=p_pu, f=60)
+                    else:
+                        der_obj.update_der_input(p_dc_pu=p_pu, f=60)
+
+
+
+
+                    self.der_objs.append(der_obj)
 
 
         self.numberofders = len(self.der_objs)
@@ -67,20 +68,20 @@ class OpenDERInterface:
         self._q_converged = [False for der_obj in self.der_objs]
         self._p_converged = [False for der_obj in self.der_objs]
 
-        self._p_out = [None for der_obj in self.der_objs]
-        self._q_out = [None for der_obj in self.der_objs]
+        self._p_out = [0 for der_obj in self.der_objs]
+        self._q_out = [0 for der_obj in self.der_objs]
 
-        self._p_inv = [None for der_obj in self.der_objs]
-        self._q_inv = [None for der_obj in self.der_objs]
+        self._p_inv = [0 for der_obj in self.der_objs]
+        self._q_inv = [0 for der_obj in self.der_objs]
 
-        self._p_previous = [None for der_obj in self.der_objs]
-        self._q_previous = [None for der_obj in self.der_objs]
+        self._p_previous = [0 for der_obj in self.der_objs]
+        self._q_previous = [0 for der_obj in self.der_objs]
 
-        self._current_v = [None for der_obj in self.der_objs]
-        self._previous_v = [None for der_obj in self.der_objs]
+        self._current_v = [0 for der_obj in self.der_objs]
+        self._previous_v = [0 for der_obj in self.der_objs]
 
-        self._delta_p = [None for der_obj in self.der_objs]
-        self._delta_q = [None for der_obj in self.der_objs]
+        self._delta_p = [0 for der_obj in self.der_objs]
+        self._delta_q = [0 for der_obj in self.der_objs]
 
         self._p_check = [False for der_obj in self.der_objs]
         self._q_check = [False for der_obj in self.der_objs]
@@ -107,6 +108,24 @@ class OpenDERInterface:
 
     def create_vr_objs(self, vr_list):
         self.ckt.create_vr_objs(vr_list)
+
+    def enable_control(self):
+        self.ckt.enable_control()
+
+    def load_scaling(self, mult):
+        self.ckt.load_scaling(mult)
+
+    def read_vr(self):
+        self.ckt.read_vr()
+
+    def write_vr(self):
+        self.ckt.write_vr()
+    def update_vr_tap(self):
+        self.ckt.update_vr_tap()
+
+    def disable_control(self):
+        self.ckt.disable_control()
+
 
     def _check_q(self):
         for i in range(self.numberofders):
@@ -249,12 +268,17 @@ class OpenDERInterface:
         theta_der_list = self.ckt.read_der_voltage_angle()
         if p_dc_pu_list is None:
             for der, V, theta in zip(self.der_objs, v_der_list, theta_der_list):
-                der.update_der_input(v_pu=V, p_dc_pu=1, theta=theta)
+                der.update_der_input(v_pu=V, theta=theta)
                 der.run()
                 print(der)
         else:
-            for der, V, theta, p_dc_pu in zip(self.der_objs, v_der_list, theta_der_list, p_dc_pu_list):
-                der.update_der_input(v_pu=V, p_dc_pu=p_dc_pu, theta=theta)
+            for der, V, theta, p_pu in zip(self.der_objs, v_der_list, theta_der_list, p_dc_pu_list):
+                if isinstance(der, DER_BESS):
+                    der.update_der_input(p_dem_pu=p_pu, f=60)
+                else:
+                    der.update_der_input(p_dc_pu=p_pu, f=60)
+
+                der.update_der_input(v_pu=V, theta=theta)
                 der.run()
                 print(der)
 

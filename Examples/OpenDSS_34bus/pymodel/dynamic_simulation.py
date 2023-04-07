@@ -6,6 +6,7 @@ import os
 from opender_interface.opender_interface import OpenDERInterface
 from opender_interface.opendss_interface import OpenDSSInterface
 from opender_interface.time_plots import TimePlots
+from opender import DERCommonFileFormat
 
 #%%
 
@@ -47,16 +48,22 @@ vr_list = [
 
 ckt_int.create_vr_objs(vr_list)
 #
-    
+
 #%%
 # connect a DER to each bus and create DER model interface
-der_list = ckt_int.create_opender_objs(p_dc_pu=0.8, ES_RAMP_RATE=00, ES_RANDOMIZED_DELAY=300)
+der_file = DERCommonFileFormat(NP_VA_MAX=400000,
+                               NP_P_MAX=400000,
+                               NP_Q_MAX_INJ=176000,
+                               NP_Q_MAX_ABS=176000,
+                               ES_RAMP_RATE=00,
+                               ES_RANDOMIZED_DELAY=300)
+der_list = ckt_int.create_opender_objs(p_pu=0.8,der_files=der_file)
 
 
 #%%
 # add a fault branch to the circuit, disable the fault by setting very high impedance
-ckt_int.ckt.cmd('New Fault.F1 Phases=3 Bus1={}'.format('808'))
-ckt_int.ckt.cmd('Edit Fault.F1 R=1000000')
+ckt_int.dss.text('New Fault.F1 Phases=3 Bus1={}'.format('808'))
+ckt_int.dss.text('Edit Fault.F1 R=1000000')
 
 
 # run a load flow and check the feeder total power
@@ -65,21 +72,21 @@ t = 0
 plot_obj = TimePlots(3,1)
 
 # Initialize
-ckt_int.ckt.enable_control()
+ckt_int.enable_control()
 mult = np.interp(0, load_profile.index, load_profile['mult'])
-ckt_int.ckt.load_scaling(mult)
+ckt_int.load_scaling(mult)
 ckt_int.der_convergence_process()
-ckt_int.ckt.read_vr()
-ckt_int.ckt.update_vr_tap()
-ckt_int.ckt.disable_control()
+ckt_int.read_vr()
+ckt_int.update_vr_tap()
+ckt_int.disable_control()
 
 
 while t < 1200:
     # event simulation
     if t > 45 and t < 50:
-        ckt_int.ckt.cmd('Edit Fault.F1 R=0.01')
+        ckt_int.dss.text('Edit Fault.F1 R=0.01')
     else:
-        ckt_int.ckt.cmd('Edit Fault.F1 R=1000000')
+        ckt_int.dss.text('Edit Fault.F1 R=1000000')
 
     ckt_int.read_sys_voltage()
 
@@ -95,10 +102,10 @@ while t < 1200:
 
     # # change load level
     mult = np.interp(t, load_profile.index, load_profile['mult'])
-    ckt_int.ckt.load_scaling(mult)
+    ckt_int.load_scaling(mult)
     
     # solve load flow
-    ckt_int.ckt.cmd('solve')
+    ckt_int.solve_power_flow()
 
     # simulate vr control
     for vr in ckt_int.ckt.vrStates:
@@ -107,7 +114,7 @@ while t < 1200:
         vr['model'].run(Vpri = Vpri, Ipri = Ipri)
 
     # set the new tap position into opendss
-    ckt_int.ckt.write_vr()
+    ckt_int.write_vr()
     
     # save result
     result1 = {}
