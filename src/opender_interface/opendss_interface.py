@@ -47,6 +47,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
             self.DER_sim_type = 'vsource'
         if DER_sim_type == 'generator':
             self.DERs = self.generators
+            self.der_bus_list = self.gen_bus_list
             self.DER_sim_type = 'generator'
 
     def init_buses(self):
@@ -149,6 +150,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
 
     def init_generators(self):
         gennames = list(self.dss.generators_all_names())
+        self.gen_bus_list = []
         gens = []
         for genname in gennames:
             self.dss.generators_write_name(genname)
@@ -157,6 +159,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
             kVA = self.dss.generators_read_kva_rated()
             self.dss.pvsystems_kw()
             bus = self.dss.text(f'? generator.{genname}.bus1')
+            kV = float(self.dss.text(f'? generator.{genname}.kv'))
             this_type = 'generator'
             gens.append({
                 'name':genname,
@@ -165,7 +168,9 @@ class OpenDSSInterface(SimulationInterfacesABC):
                 'kw': kw,
                 'kvar': kvar,
                 'kVA': kVA,
+                'kV': kV,
             })
+            self.gen_bus_list.append(bus.split('.')[0].replace(' ', ''))
 
         self.generators = pd.DataFrame(gens)
         # self.DERs.set_index('name', inplace=True)
@@ -293,9 +298,9 @@ class OpenDSSInterface(SimulationInterfacesABC):
 
         if self.DER_sim_type == 'generator':
             self.dss.text(f'generator.{name}.kVA = {der_obj.der_file.NP_VA_MAX / 1000}')
-            self.dss.text(f'generator.{name}.Pmpp = {der_obj.der_file.NP_P_MAX / 1000}')
-            self.dss.text(f'generator.{name}.kvarmax = {der_obj.der_file.NP_Q_MAX_ABS / 1000}')
-            self.dss.text(f'generator.{name}.kvarmaxabs = {der_obj.der_file.NP_Q_MAX_INJ / 1000}')
+            self.dss.text(f'generator.{name}.kW = {der_obj.der_file.NP_P_MAX / 1000}')
+            self.dss.text(f'generator.{name}.maxkvar = {der_obj.der_file.NP_Q_MAX_ABS / 1000}')
+            self.dss.text(f'generator.{name}.minkvar = {-der_obj.der_file.NP_Q_MAX_INJ / 1000}')
 
     def load_scaling(self, mult=1.0):
         # scale load
@@ -397,6 +402,8 @@ class OpenDSSInterface(SimulationInterfacesABC):
             ii = 0
             phases_num = self.dss.cktelement_read_bus_names()[0].split('.')[1:]
             phases = [chr(int(i)+64) for i in phases_num]
+            if phases == []:
+                phases = ['A', 'B', 'C']
 
             for phase in phases:
                 if ('_'+phase.lower() in linename) or ('_'+phase in linename) or (not(('_a' in linename)or('_b' in linename)or('_c' in linename))):

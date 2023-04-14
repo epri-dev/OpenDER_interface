@@ -2,7 +2,7 @@ from opender import DER, DER_PV, DER_BESS, DERCommonFileFormat, DERCommonFileFor
 from . import simulation_interface
 from opender_interface.opendss_interface import OpenDSSInterface
 from typing import Union, Tuple, List, Dict
-
+from copy import deepcopy
 
 class OpenDERInterface:
 
@@ -20,10 +20,15 @@ class OpenDERInterface:
         self.der_objs = []
         self.t_s = t_s
         DER.t_s = t_s
+        self.der_objs_temp = []
+
+        self._delta_q = 0.5
+        self._delta_p = 0.5
+
 
     def initialize(self, DER_sim_type='PVSystem'):
         self.ckt.initialize(DER_sim_type)
-    def create_opender_objs(self, der_files, p_pu):
+    def create_opender_objs(self, der_files, p_pu=0):
 
         if isinstance(der_files, Union[DERCommonFileFormat, DERCommonFileFormatBESS]):
             der_files= {der_obj[1]['name']: der_files for der_obj in self.ckt.DERs.iterrows()}
@@ -31,7 +36,7 @@ class OpenDERInterface:
 
         for (index, der_i), setting in zip(self.ckt.DERs.iterrows(), der_files):
             for name, der_file in der_files.items():
-                if name == der_i['name']:
+                if name.upper() == der_i['name'].upper():
                     if 'PV' in der_i['name'].upper():
                         der_obj = DER_PV(der_file)
                     else:
@@ -79,9 +84,6 @@ class OpenDERInterface:
 
         self._current_v = [0 for der_obj in self.der_objs]
         self._previous_v = [0 for der_obj in self.der_objs]
-
-        self._delta_p = [0 for der_obj in self.der_objs]
-        self._delta_q = [0 for der_obj in self.der_objs]
 
         self._p_check = [False for der_obj in self.der_objs]
         self._q_check = [False for der_obj in self.der_objs]
@@ -146,15 +148,13 @@ class OpenDERInterface:
         self._check_p()
         self._check_q()
 
-        self._delta_q = 0.5
-        self._delta_p = 0.5
 
     def control_loop_iteration(self):
         self._reset_converged()
 
-        self._p_inv = [der_obj.p_out_kw for der_obj in self.der_objs]
-        self._q_inv = [der_obj.q_out_kvar for der_obj in self.der_objs]
-        self._current_v = [der_obj.der_input.v_meas_pu for der_obj in self.der_objs] #TODO update to threephase?
+        self._p_inv = [der_obj.p_out_kw for der_obj in self.der_objs_temp]
+        self._q_inv = [der_obj.q_out_kvar for der_obj in self.der_objs_temp]
+        self._current_v = [der_obj.der_input.v_meas_pu for der_obj in self.der_objs_temp] #TODO update to threephase?
 
         if not self._cl_first_iteration:
             self._calculate_p_out()
@@ -231,57 +231,39 @@ class OpenDERInterface:
         i = 0
         self.initialize_time_step()
 
-        tmp_t_s = DER.t_s
-        DER.t_s = 10000
-
         while not self._converged and i < 100:
-            i += 1
-            self.ckt.solve_power_flow()
-            self.ckt.read_sys_voltage()
-            self.ckt.read_line_flow()
-
-            v_list = self.ckt.read_der_voltage(self.der_bus)
-            theta_list = self.ckt.read_der_voltage_angle(self.der_bus)
-            for der_obj,v_pu,theta in zip(self.der_objs,v_list,theta_list):   # type: der.DER
-                der_obj.update_der_input(v_pu=v_pu,theta=theta)
-
-            for der_obj in self.der_objs:
-                der_obj.run()
-                print(der_obj)
-                print(der_obj.ridethroughperf)
-
+            self.der_objs_temp = deepcopy(self.der_objs)
+            self.run(self.der_objs_temp)
             self.control_loop_iteration()
+            self.ckt.update_der_output_powers(self.der_objs_temp, self._p_out, self._q_out)
+            self.ckt.solve_power_flow()
 
-            self.ckt.update_der_output_powers(self.der_objs, self._p_out, self._q_out)
-
+        self.run()
+        self.update_der_output_powers()
         self.ckt.solve_power_flow()
-        DER.t_s = tmp_t_s
-        for der_obj in self.der_objs:
-            der_obj.time = 0
 
         if self._converged:
             return self._p_out, self._q_out
+        else:
+            print('convergence error!')
 
 
-    def run(self, p_dc_pu_list = None):
+    def run(self, der_objs=None):
+        if der_objs is None:
+            der_objs = self.der_objs
+
+        self.ckt.read_sys_voltage()
         v_der_list = self.ckt.read_der_voltage()
         theta_der_list = self.ckt.read_der_voltage_angle()
-        if p_dc_pu_list is None:
-            for der, V, theta in zip(self.der_objs, v_der_list, theta_der_list):
-                der.update_der_input(v_pu=V, theta=theta)
-                der.run()
-                print(der)
-        else:
-            for der, V, theta, p_pu in zip(self.der_objs, v_der_list, theta_der_list, p_dc_pu_list):
-                if isinstance(der, DER_BESS):
-                    der.update_der_input(p_dem_pu=p_pu, f=60)
-                else:
-                    der.update_der_input(p_dc_pu=p_pu, f=60)
+        for der, V, theta in zip(der_objs, v_der_list, theta_der_list):
+            der.update_der_input(v_pu=V, theta=theta)
+            der.run()
+            print(der)
+    def update_der_p_pu(self, p_pu_list):
+        for der, p_pu in zip(self.der_objs, p_pu_list):
+            if isinstance(der, DER_BESS):
+                der.update_der_input(p_dem_pu=p_pu, f=60)
+            else:
+                der.update_der_input(p_dc_pu=p_pu, f=60)
 
-                der.update_der_input(v_pu=V, theta=theta)
-                der.run()
-                print(der)
-
-    def solve_power_flow(self):
-        self.ckt.solve_power_flow()
 

@@ -10,18 +10,17 @@ from opender_interface.xy_plot import XYPlots
 
 
 # substation initial voltage
-vsub0 = 1.03
+vsub0 = 1.00
 
 script_path = pathlib.Path(os.path.dirname(__file__))
 circuit_folder = script_path.joinpath("circuit")
 dss_file = circuit_folder.joinpath("single_vsource_gfov.dss")
 
 # configure the dynamic simulation
-delt = 0.0004wor  # sampling time step (s)
+delt = 0.0004  # sampling time step (s)
 
 
 # %%
-# run ckt_int simulation
 ckt_int = OpenDERInterface(dss_file, t_s=delt)
 ckt_int.initialize(DER_sim_type='vsource',)
 

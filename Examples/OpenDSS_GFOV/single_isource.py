@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Apr 23 08:32:26 2020
-
-@author: pwre002
-"""
-
 import numpy as np
 import os
 import pathlib
@@ -43,26 +36,8 @@ der_file = DERCommonFileFormat(NP_VA_MAX=100000,
 der_list = ckt_int.create_opender_objs(p_pu=1, der_files=der_file)
 
 
-
-
-# cmdList = [
-#     'compile {}/circuit/{}'.format(filepath,filename),
-#     'PVSystem.PV1.Pmpp={:.1f}'.format(pdc*sbase*1.e3),
-#     'PVSystem.PV1.kvar={:.1f}'.format(0.0*sbase*1.e3),
-#     'solve mode=dynamic',
-#     ]
-# dcl.dss_cmd(dssTxt,cmdList)
-
 # Initialize
-# ckt_int.enable_control()
-# # if run with profile
 ckt_int.der_convergence_process()
-# ckt_int.read_vr()
-# ckt_int.update_vr_tap()
-
-# vbus_der = dcl.get_vbus(dssCkt, 'DER')
-# vact = np.mean([vbus_der[key] for key in vbus_der.keys()])
-# der.initialize(v=vact, p=pdc, q=0)
 
 # run time series simulation
 tsim = 0
@@ -70,7 +45,6 @@ tevt1 = 0.2
 tevt2 = 0.4
 tend = 0.6  # total simulation time (s)
 
-vsub = 1.026
 plot_obj = TimePlots(3,1)
 v_plt_load = XYPlots(ckt_int.der_objs[0])
 v_plt_derh = XYPlots(ckt_int.der_objs[0])
@@ -83,8 +57,6 @@ while tsim < tend:
 
     if tsim >= tevt2:
         ckt_int.ckt.cmd('open line.line1')
-
-    # ckt_int.set_source_voltage(vsub)
 
     ckt_int.run()
 

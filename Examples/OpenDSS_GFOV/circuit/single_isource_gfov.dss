@@ -1,6 +1,6 @@
 Clear
 
-New Circuit.ckt1 pu=1.026  r1=0.0  x1=0.001  r0=0.0 x0=0.001  bus1= sub_src basekv = 12
+New Circuit.ckt1 pu=1.0  r1=0.0  x1=0.001  r0=0.0 x0=0.001  bus1= sub_src basekv = 12
 
 //New line.line1 bus1=sub_src.1  bus2=load.1  r1=0.5648  x1=2.8241  r0=0.5648  x0=2.8241  phases=1  enabled=true
 //New line.line11 bus1=sub_src.2.3  bus2=load.2.3  r1=0.5648  x1=2.8241  r0=0.5648  x0=2.8241  phases=2  enabled=true

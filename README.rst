@@ -28,3 +28,4 @@ Examples:
 * OpenDSS_34bus - dynamic simulation: interactions between voltage regulators and DER enter service performance
 * OpenDSS_34bus - steady state simulation: comparison between OpenDSS internal inverter model vs OpenDER
 * OpenDSS_GFOV: dynamic simulation of a ground fault over voltage
+* OpenDSS_BESS_PV: 15min time series simulation using BESS for PV power peak shaving
