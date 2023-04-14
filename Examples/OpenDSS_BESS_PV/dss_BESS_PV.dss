@@ -1,0 +1,37 @@
+Clear
+
+New Circuit.ckt1 pu=1.03  r1=0.0  x1=0.001  r0=0.0 x0=0.001  bus1= sub_src basekv = 12
+
+New line.line1 bus1=sub_src  bus2=load  r1=5  x1=5  r0=5  x0=5  phases=3  enabled=true
+New line.line2 bus1=load     bus2=der   r1=50  x1=50  r0=50  x0=50  phases=3  enabled=true
+
+New load.load1 Bus1= load.1.2.3 Phases=3 Conn=Delta kV= 12 kW= 1000.0 kVAR= 0.0 vlowpu=0.1 vmaxpu=20 model=2
+New Generator.PV1 Bus1=der.1.2.3 Phases=3, Conn=Wye kV=12 kW=2000 kvar=0
+New Generator.BESS1 Bus1=der.1.2.3 Phases=3, Conn=Wye kV=12 kW=2000 kvar=0
+
+Set voltagebases=[12,]
+
+Calcv
+
+compile
+solve
+
+Clear
+
+New Circuit.ckt1 pu=1.03  r1=0.0  x1=0.001  r0=0.0 x0=0.001  bus1= sub_src basekv = 12
+
+New line.line1 bus1=sub_src  bus2=load  r1=5  x1=5  r0=5  x0=5  phases=3  enabled=true
+New line.line2 bus1=load     bus2=der   r1=15  x1=15  r0=15  x0=15  phases=3  enabled=true
+
+New load.load1 Bus1= load.1.2.3 Phases=3 Conn=Delta kV= 12 kW= 1000.0 kVAR= 0.0 vlowpu=0.1 vmaxpu=20 model=2
+New Generator.PV1 Bus1=der.1.2.3 Phases=3, Conn=Wye kV=12 kW=000 kvar=0 model=4
+New Generator.BESS1 Bus1=der.1.2.3 Phases=3, Conn=Wye kV=12 kW=000 kvar=0 model=4
+
+Set voltagebases=[12,]
+
+Calcv
+
+compile
+solve
+
+
