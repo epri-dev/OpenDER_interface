@@ -3,12 +3,10 @@ import numpy as np
 import pandas as pd
 import cmath
 from opender_interface.simulation_interface import SimulationInterfacesABC
-from opender.der import DER, DERCommonFileFormat
-from .voltage_regulator import VR_Model
+
 
 class OpenDSSInterface(SimulationInterfacesABC):
-
-    def __init__(self, dss_file: str, tstep=100000) -> None:
+    def __init__(self, dss_file: str) -> None:
 
         self.dss_file = dss_file
         self.dss = py_dss_interface.DSSDLL()
@@ -16,7 +14,16 @@ class OpenDSSInterface(SimulationInterfacesABC):
 
         self.dss.text(f"Compile [{self.dss_file}]")
 
-        self.tstep = tstep
+        self._DERs = []
+        self._vrStates = {}
+
+    @property
+    def DERs(self):
+        return self._DERs
+
+    @property
+    def vrStates(self):
+        return self._vrStates
 
 
     def cmd(self,cmd_line):
@@ -27,30 +34,32 @@ class OpenDSSInterface(SimulationInterfacesABC):
         else:
             raise ValueError("OpenDSS Initializing cmd_list is not valid")
 
-
-    def initialize(self, DER_sim_type = 'PVSystem'):
-        self.init_buses()
-        self.init_lines()
-        self.init_loads()
-        self.init_generators()
-        self.init_vr()
+    def initialize(self, t_s, DER_sim_type = 'PVSystem',):
+        self.__init_buses()
+        self.__init_lines()
+        self.__init_loads()
+        self.__init_generators()
+        self.__init_vr(t_s)
         self.DER_sim_type = DER_sim_type
 
-        if DER_sim_type == 'PVSystem':
-            self.init_PVSystems()
-            self.DER_sim_type = 'PVSystem'
-        if DER_sim_type == 'isource':
-            self.init_isources()
-            self.DER_sim_type = 'isource'
-        if DER_sim_type == 'vsource':
-            self.init_vsources()
-            self.DER_sim_type = 'vsource'
-        if DER_sim_type == 'generator':
-            self.DERs = self.generators
-            self.der_bus_list = self.gen_bus_list
-            self.DER_sim_type = 'generator'
 
-    def init_buses(self):
+
+        if DER_sim_type == 'PVSystem':
+            self.__init_PVSystems()
+            # self.DER_sim_type = 'PVSystem'
+        if DER_sim_type == 'isource':
+            self.__init_isources()
+            # self.DER_sim_type = 'isource'
+        if DER_sim_type == 'vsource':
+            self.__init_vsources()
+            # self.DER_sim_type = 'vsource'
+        if DER_sim_type == 'generator':
+            self._DERs = self.generators
+            self.der_bus_list = self.gen_bus_list
+            # self.DER_sim_type = 'generator'
+
+
+    def __init_buses(self):
         nodenames = list(self.dss.circuit_all_node_names())
         buses = []
         for busname in self.dss.circuit_all_bus_names():
@@ -93,7 +102,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
             'nodeIndex_C': 'int64',
         })
 
-    def init_lines(self):
+    def __init_lines(self):
         linenames = list(self.dss.lines_all_names())
         lines = []
         for linename in linenames:
@@ -123,7 +132,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
             'nPhases': 'int64',
         })
 
-    def init_loads(self):
+    def __init_loads(self):
         loadnames = self.dss.loads_all_names()
         loads = []
         for loadname in loadnames:
@@ -148,7 +157,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
         if not self.loads.empty:
             self.loads.set_index('name', inplace=True)
 
-    def init_generators(self):
+    def __init_generators(self):
         gennames = list(self.dss.generators_all_names())
         self.gen_bus_list = []
         gens = []
@@ -175,7 +184,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
         self.generators = pd.DataFrame(gens)
         # self.DERs.set_index('name', inplace=True)
 
-    def init_PVSystems(self):
+    def __init_PVSystems(self):
         PVnames = list(self.dss.pvsystems_all_names())
         PVs = []
         for PVname in PVnames:
@@ -200,10 +209,11 @@ class OpenDSSInterface(SimulationInterfacesABC):
             })
             self.der_bus_list.append(bus.split('.')[0].replace(' ', ''))
 
-        self.DERs = pd.DataFrame(PVs)
+        self._DERs = pd.DataFrame(PVs)
         # self.DERs.set_index('name', inplace=True)
 
-    def init_isources(self):
+
+    def __init_isources(self):
         PVnames = list(self.dss.isources_all_names())
         PVs = []
         PVnames = [PVname.split('_')[0].replace(' ', '') for PVname in PVnames]
@@ -231,10 +241,10 @@ class OpenDSSInterface(SimulationInterfacesABC):
             })
             self.der_bus_list.append(bus.split('.')[0].replace(' ', ''))
 
-        self.DERs = pd.DataFrame(PVs)
+        self._DERs = pd.DataFrame(PVs)
         # self.DERs.set_index('name', inplace=True)
 
-    def init_vsources(self):
+    def __init_vsources(self):
         PVnames = list(self.dss.vsources_all_names())[1:]
         PVs = []
         PVnames = [PVname.split('_')[0].replace(' ', '') for PVname in PVnames]
@@ -260,7 +270,8 @@ class OpenDSSInterface(SimulationInterfacesABC):
             })
             self.der_bus_list.append(bus.split('.')[0].replace(' ', ''))
 
-        self.DERs = pd.DataFrame(PVs)
+        self._DERs = pd.DataFrame(PVs)
+
 
     def update_der_info(self, name, der_obj):
         if self.DER_sim_type == 'PVSystem':
@@ -311,7 +322,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
                 self.dss.loads_write_kw(float(new_kw))
 
 
-    # update DER output P/Q to circuit simulation
+
     def update_der_output_powers(self, der_list=None, p_list=None, q_list=None):
 
         if p_list is not None and (self.DER_sim_type == 'isource' or self.DER_sim_type == 'vsource'):
@@ -366,7 +377,6 @@ class OpenDSSInterface(SimulationInterfacesABC):
         self.dss.text("solve")
 
 
-
     def read_sys_voltage(self):
         nodenames = self.dss.circuit_all_node_names()
         temp = self.dss.circuit_all_bus_volts()
@@ -395,6 +405,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
             der_bus_list = self.der_bus_list
         return [self.buses.loc[der_bus, ['Theta_A', 'Theta_B', 'Theta_C']] for der_bus in der_bus_list]
 
+
     def read_line_flow(self):
         linenames = self.lines.index
         for linename in linenames:
@@ -421,13 +432,14 @@ class OpenDSSInterface(SimulationInterfacesABC):
         self.dss.vsources_write_pu(v_pu)
 
 
-    def init_vr(self):
-        self.vrStates = []
+    def __init_vr(self,t_s):
+        # self.vrStates = []
         VR_names = list(self.dss.regcontrols_all_names())
         # RegulatorByPhase type
         for vr_name in VR_names:
             vr=dict()
-            vr['Ts'] = self.tstep
+            vr['Ts'] = 100000
+            # vr['Ts'] = t_s
             # retrieve vr information from DSS circuit
             vr['Xfmr'] = self.cmd('? regcontrol.{}.transformer'.format(vr_name))
             vr['winding'] = int(self.cmd('? regcontrol.{}.winding'.format(vr_name)))
@@ -443,7 +455,6 @@ class OpenDSSInterface(SimulationInterfacesABC):
             bus = buses.replace('[', '').replace(']', '').split(',')[:-1][vr['winding'] - 1]
             bus = bus.replace(' ', '')
             vr['regBus'] = []
-            vr['name']=vr_name
             if vr['phases'] == 1:
                 vr['regBus'].append(bus)
             else:
@@ -451,24 +462,24 @@ class OpenDSSInterface(SimulationInterfacesABC):
                     bus = bus.split('.')[0]
                     vr['regBus'].append('{}.{}'.format(bus, ph))
 
-            self.vrStates.append(vr)
+            self._vrStates[vr_name]=vr
 
-    def create_vr_objs(self,vr_list):
-        for vr in vr_list:
-            for fdr_vr in self.vrStates:
-                if fdr_vr['name'] == vr['name']:
-                    fdr_vr['model'] = VR_Model(
-                        Ts=self.tstep,
-                        Td_ctrl=vr['Td_ctrl'],
-                        Td_tap=vr['Td_tap'],
-                        Vref=fdr_vr['Vref'],
-                        db=fdr_vr['db'],
-                        LDC_R=fdr_vr['LDC_R'],
-                        LDC_X=fdr_vr['LDC_X'],
-                        PT_Ratio=fdr_vr['PT_Ratio'],
-                        CT_Primary=fdr_vr['CT_Primary'],
-                        tap_ini=0,
-                    )
+    # def create_vr_objs(self,vr_list):
+    #     for vr in vr_list:
+    #         for fdr_vr in self.vrStates:
+    #             if fdr_vr['name'] == vr['name']:
+    #                 fdr_vr['model'] = VR_Model(
+    #                     Ts=self.tstep,
+    #                     Td_ctrl=vr['Td_ctrl'],
+    #                     Td_tap=vr['Td_tap'],
+    #                     Vref=fdr_vr['Vref'],
+    #                     db=fdr_vr['db'],
+    #                     LDC_R=fdr_vr['LDC_R'],
+    #                     LDC_X=fdr_vr['LDC_X'],
+    #                     PT_Ratio=fdr_vr['PT_Ratio'],
+    #                     CT_Primary=fdr_vr['CT_Primary'],
+    #                     tap_ini=0,
+    #                 )
 
     # enable time dependent component action for snapshot analysis or initial power flow
     def enable_control(self):
@@ -479,28 +490,28 @@ class OpenDSSInterface(SimulationInterfacesABC):
         self.cmd('set controlmode=OFF')
 
     def read_vr(self):
-        for vr in self.vrStates:
-            vr['tapPos'] = int(self.cmd('? regcontrol.{}.tapNum'.format(vr['name'])))
-            print(vr['tapPos'])
+        for vrname in self._vrStates.keys():
+            self._vrStates[vrname]['tapPos'] = int(self.cmd('? regcontrol.{}.tapNum'.format(vrname)))
+            print(self._vrStates[vrname]['tapPos'])
 
-    def update_vr_tap(self):
-        for vr in self.vrStates:
-            vr['model'].tap = float(vr['tapPos'])
 
     def write_vr(self):
-        for vr in self.vrStates:
-            self.cmd('edit regcontrol.{} tapNum={}'.format(vr['name'], vr['model'].tap))
+        for vrname in self._vrStates.keys():
+            self.cmd('edit regcontrol.{} tapNum={}'.format(vrname, self._vrStates[vrname]['UpdatedTap']))
 
-    def read_vr_v_i(self, vr):
+
+    def read_vr_v_i(self, vrname):
         # voltage
-        Vpri = [self.nodevolts.loc[node, 'volts'] for node in vr['regBus']]
+        Vpri = [self.nodevolts.loc[node, 'volts'] for node in self._vrStates[vrname]['regBus']]
         # current
-        iwdg = self.cmd('? transformer.{}.wdgcurrents'.format(vr['Xfmr'])).split(',')[:-1]
+        iwdg = self.cmd('? transformer.{}.wdgcurrents'.format(self._vrStates[vrname]['Xfmr'])).split(',')[:-1]
         imag = [float(iwdg[2 * ii]) for ii in range(int(len(iwdg) / 2))]
         iang = [float(iwdg[2 * ii + 1].replace('(', '').replace(')', '')) for ii in range(int(len(iwdg) / 2))]
         icplx = [imag[ii] * np.exp(1j * np.pi * iang[ii] / 180) for ii in range(len(imag))]
-        if vr['winding'] == 1:
+        if self._vrStates[vrname]['winding'] == 1:
             Ipri = [icplx[2 * ii] for ii in range(int(len(icplx) / 2))]
         else:
             Ipri = [-icplx[2 * ii + 1] for ii in range(int(len(icplx) / 2))]
         return Vpri, Ipri
+
+

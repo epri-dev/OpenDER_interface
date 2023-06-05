@@ -12,6 +12,7 @@ import numpy as np
 
 # %%
 class VR_Model(object):
+
     """
     voltage regulator control model
     """

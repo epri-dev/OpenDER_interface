@@ -4,6 +4,7 @@ import pathlib
 from opender_interface.opender_interface import OpenDERInterface
 from opender import DER, DERCommonFileFormat, DERCommonFileFormatBESS
 from opender_interface.time_plots import TimePlots
+from opender_interface.opendss_interface import OpenDSSInterface
 
 # %%
 # parameter calculation
@@ -16,7 +17,11 @@ delt = 60 * 15  # sampling time step (s)
 
 
 # %%
-ckt_int = OpenDERInterface(dss_file, t_s=delt)
+
+ckt = OpenDSSInterface(str(dss_file))
+ckt_int = OpenDERInterface(ckt,t_s=delt)
+
+# ckt_int = OpenDERInterface(dss_file, t_s=delt)
 derfiles = {
     'PV1': DERCommonFileFormat(NP_P_MAX=1000000, NP_VA_MAX=1000000, NP_Q_MAX_INJ=440000, NP_Q_MAX_ABS=440000),
 
@@ -31,7 +36,7 @@ der_list = ckt_int.create_opender_objs(derfiles,p_pu=0)
 DER.t_s=delt
 
 ckt_int.der_convergence_process()
-ckt_int.solve_power_flow()
+# ckt_int.solve_power_flow()
 
 # run time series simulation
 tsim = 0
@@ -56,7 +61,8 @@ for p in PV_profile:
     ckt_int.der_convergence_process()
 
     ckt_int.read_line_flow()
-    ckt_int.dss.circuit_set_active_element('line.line2')
+
+    ckt_int.ckt.dss.circuit_set_active_element('line.line2')
 
     plot_obj.add_to_traces(
         {

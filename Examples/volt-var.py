@@ -3,13 +3,14 @@ import opender
 from opender_interface.time_plots import TimePlots
 from opender_interface.xy_plot import XYPlots
 
-
+## voltage profile
 V_ss = [1, 1.03, 0.93, 1.09, 1, 0.97, 1.07, 0.91, 1]
 V = np.concatenate([[v]*30 for v in V_ss])
 
 
 t_s = opender.DER.t_s = 1
 
+## create DER object
 der_obj = opender.DER_BESS()
 der_obj.der_file.QV_MODE_ENABLE = True
 der_obj.der_file.QV_OLRT = 5
@@ -18,13 +19,16 @@ der_obj.der_file.QV_OLRT = 5
 tplot = TimePlots(3,1, ['Voltage [pu]', 'Power output [pu]', 'Reactive power output [pu]'])
 xyplot = XYPlots(der_obj)
 capture = range(20, 400, 30)
+
 for i, V in enumerate(V):
     der_obj.update_der_input(v_pu=float(V), f=60, p_dem_pu=1)
     der_obj.run()
 
     tplot.add_to_traces(
         {
-            'V': V/240,
+
+            'V': V,
+            # 'V': V/240
         },
         {
             'OpenDER P': der_obj.p_out_pu,

@@ -52,7 +52,8 @@ topology = [
     [862, 838]
 ]
 
-ckt_int = OpenDERInterface(str(dss_file))
+ckt = OpenDSSInterface(str(dss_file))
+ckt_int = OpenDERInterface(ckt)
 
 
 ckt_int.initialize(DER_sim_type='PVSystem')
@@ -70,7 +71,7 @@ def plot_voltage_profile(ax, data_label, data_color):
 scale = 1
 for i, PV in ckt_int.ckt.DERs.iterrows():
     name = PV['name']
-    ckt_int.dss.text(f'PVSystem.{name}.%Pmpp={scale * 100}')
+    ckt_int.cmd(f'PVSystem.{name}.%Pmpp={scale * 100}')
 
 ckt_int.enable_control()
 ckt_int.solve_power_flow()

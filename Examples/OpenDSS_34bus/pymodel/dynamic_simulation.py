@@ -28,8 +28,10 @@ load_profile = pd.read_excel(load_file, index_col=0)
 tstep = 1
 
 #%%
+ckt = OpenDSSInterface(str(dss_file))
+ckt_int = OpenDERInterface(ckt,t_s=tstep)
 
-ckt_int = OpenDERInterface(str(dss_file), t_s=tstep)
+# ckt_int = OpenDERInterface(str(dss_file), t_s=tstep)
 ckt_int.initialize()
 
 #%%
@@ -62,8 +64,8 @@ der_list = ckt_int.create_opender_objs(p_pu=0.8,der_files=der_file)
 
 #%%
 # add a fault branch to the circuit, disable the fault by setting very high impedance
-ckt_int.dss.text('New Fault.F1 Phases=3 Bus1={}'.format('808'))
-ckt_int.dss.text('Edit Fault.F1 R=1000000')
+ckt_int.cmd('New Fault.F1 Phases=3 Bus1={}'.format('808'))
+ckt_int.cmd('Edit Fault.F1 R=1000000')
 
 
 # run a load flow and check the feeder total power
@@ -84,9 +86,9 @@ ckt_int.disable_control()
 while t < 1200:
     # event simulation
     if t > 45 and t < 50:
-        ckt_int.dss.text('Edit Fault.F1 R=0.01')
+        ckt_int.cmd('Edit Fault.F1 R=0.01')
     else:
-        ckt_int.dss.text('Edit Fault.F1 R=1000000')
+        ckt_int.cmd('Edit Fault.F1 R=1000000')
 
     ckt_int.read_sys_voltage()
 
@@ -108,10 +110,10 @@ while t < 1200:
     ckt_int.solve_power_flow()
 
     # simulate vr control
-    for vr in ckt_int.ckt.vrStates:
-        Vpri, Ipri = ckt_int.ckt.read_vr_v_i(vr)
+    for vrname in ckt_int.ckt.vrStates.keys():
+        Vpri, Ipri = ckt_int.read_vr_v_i(vrname)
         # run the vr control logic
-        vr['model'].run(Vpri = Vpri, Ipri = Ipri)
+        ckt_int.vr_objs[vrname].run(Vpri = Vpri, Ipri = Ipri)
 
     # set the new tap position into opendss
     ckt_int.write_vr()
@@ -129,11 +131,10 @@ while t < 1200:
         # result3[f'debug({der.name})'] = der.enterservice.vft_delay.con_del_enable_out
         # result4[f'{der.name}'] = der.enterservice.vft_delay.con_del_enable_int
 
-    for vr in ckt_int.ckt.vrStates:
-        a = vr['name']
+    for vrname in ckt_int.ckt.vrStates.keys():
         # phase = vr['phase']
-        result4[f'Tap ({a})'] = vr['model'].tap
-        result2[f'V ({a})'] = vr['model'].V
+        result4[f'Tap ({vrname})'] = ckt_int.vr_objs[vrname].tap
+        result2[f'V ({vrname})'] = ckt_int.vr_objs[vrname].V
 
     plot_obj.add_to_traces(
         {
@@ -145,7 +146,7 @@ while t < 1200:
     t = t + tstep
 
 
-a = [vr['model'].total_sw for vr in ckt_int.ckt.vrStates]
+a = [ckt_int.vr_objs[vrname].total_sw for vrname in ckt_int.vr_objs.keys()]
 print(a, sum(a))
 
 plot_obj.prepare()

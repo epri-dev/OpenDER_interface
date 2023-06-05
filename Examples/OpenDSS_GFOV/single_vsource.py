@@ -21,7 +21,11 @@ delt = 0.0004  # sampling time step (s)
 
 
 # %%
-ckt_int = OpenDERInterface(dss_file, t_s=delt)
+
+ckt = OpenDSSInterface(str(dss_file))
+ckt_int = OpenDERInterface(ckt,t_s=delt)
+
+# ckt_int = OpenDERInterface(dss_file, t_s=delt)
 ckt_int.initialize(DER_sim_type='vsource',)
 
 der_file = DERCommonFileFormat(NP_VA_MAX=100000,
