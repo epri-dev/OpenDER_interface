@@ -4,8 +4,28 @@ import pandas as pd
 import cmath
 from opender_interface.simulation_interface import SimulationInterfacesABC
 
+'''
+This is the opendss interface, which is an inheritance class of simulation interface
+'''
 
 class OpenDSSInterface(SimulationInterfacesABC):
+
+    # ******************************************************************************************************************
+    # class member
+    # ******************************************************************************************************************
+    @property
+    def DERs(self):
+        return self._DERs
+
+    @property
+    def vrStates(self):
+        return self._vrStates
+
+
+    # ******************************************************************************************************************
+    # class method
+    # ******************************************************************************************************************
+
     def __init__(self, dss_file: str) -> None:
 
         self.dss_file = dss_file
@@ -17,15 +37,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
         self._DERs = []
         self._vrStates = {}
 
-    @property
-    def DERs(self):
-        return self._DERs
-
-    @property
-    def vrStates(self):
-        return self._vrStates
-
-
+    # compile dss commands from user----------
     def cmd(self,cmd_line):
         if type(cmd_line) is list:
             return [self.dss.text(cmd) for cmd in cmd_line]
@@ -33,6 +45,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
             return self.dss.text(cmd_line)
         else:
             raise ValueError("OpenDSS Initializing cmd_list is not valid")
+
 
     def initialize(self, t_s, DER_sim_type = 'PVSystem',):
         self.__init_buses()
