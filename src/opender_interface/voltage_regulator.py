@@ -50,6 +50,9 @@ class VR_Model(object):
         self.total_sw = 0
         self.V = 0
 
+    '''
+    Determine tap based on given circuit
+    '''
     def run(self,
             Vreg=None,  # regulating voltage  (magnitude on 120V base)
             Vpri=[],  # primary voltage (complex number in V)

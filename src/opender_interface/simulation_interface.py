@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 
 '''
-This is an abstract class, all other simulators' interface are the inheritance classes.
-Current version conclude opendss interface.
+This abstract class serves as an interface for interacting with various circuit simulators. 
 '''
 
 class SimulationInterfacesABC(ABC):
@@ -11,13 +10,17 @@ class SimulationInterfacesABC(ABC):
     # class member
     # ******************************************************************************************************************
 
-    # DER objects----------
+    '''
+    Used for record DER information
+    '''
     @property
     @abstractmethod
     def DERs(self):
         pass
 
-    # voltage regulator (VR) objects----------
+    '''
+    Used for record voltage regulator (VR) information
+    '''
     @property
     @abstractmethod
     def vrStates(self):
@@ -27,44 +30,65 @@ class SimulationInterfacesABC(ABC):
     # class method
     # ******************************************************************************************************************
 
-    # initialize circuit, DERs and VRs----------
+    '''
+    Initializing circuit 
+    '''
     @abstractmethod
     def initialize(self,t_s,DER_sim_type,):
         pass
 
-    # compile commands from user----------
+    '''
+    Compile commands from user
+    '''
     @abstractmethod
     def cmd(self,command):
         pass
 
-    # update DER nameplate info to circuit----------
+    '''
+    Update DER nameplate information to circuit
+    '''
     @abstractmethod
     def update_der_info(self, name, der_obj):
         pass
 
+    '''
+    Scaling Load, input parameter "mult" refers to scaling factor.
+    '''
     @abstractmethod
     def load_scaling(self,mult=1.0):
         pass
 
+    '''
+    Solve circuit power flow
+    '''
     @abstractmethod
     def solve_power_flow(self):
         pass
 
-    # read DER bus voltage magnitute----------
+    '''
+    Read DER bus voltage magnitude
+    '''
     @abstractmethod
     def read_der_voltage(self):
         pass
 
+    '''
+    Read transmission line flow
+    '''
     @abstractmethod
     def read_line_flow(self):
         pass
 
-    # read DER bus voltage phase angle----------
+    '''
+    Read DER bus voltage phase angle
+    '''
     @abstractmethod
     def read_der_voltage_angle(self):
         pass
 
-    # update DER output into circuit----------
+    '''
+    Update DER output information (P, Q, I, V) into circuit
+    '''
     @abstractmethod
     def update_der_output_powers(self, der_list, p_list=None, q_list=None):
         pass
@@ -73,7 +97,9 @@ class SimulationInterfacesABC(ABC):
     def set_source_voltage(self, v_pu):
         pass
 
-    # read bus voltages----------
+    '''
+    Read circuit bus voltages
+    '''
     @abstractmethod
     def read_sys_voltage(self):
         pass
@@ -86,22 +112,26 @@ class SimulationInterfacesABC(ABC):
     def disable_control(self):
         pass
 
-    # read vr tap from circuit into vrStates----------
+    '''
+    Read VR tap information from circuit into "vtStates"
+    '''
     @abstractmethod
     def read_vr(self):
         pass
 
-    # Write vr_obj tap into circuit----------
+    '''
+    Write tap information from "vtStates" into circuit
+    '''
     @abstractmethod
     def write_vr(self):
         pass
 
-    # read V/I of vr from circuit----------
+    '''
+    Read the voltage and current of VR
+    '''
     @abstractmethod
     def read_vr_v_i(self,vr):
         pass
 
-    # @abstractmethod
-    # def create_vr_objs(self,vr_list):
-    #     pass
+
 
