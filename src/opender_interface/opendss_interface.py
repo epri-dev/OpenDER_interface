@@ -324,7 +324,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
     Update DER nameplate information into dss circuit.
     Input parameters:
         name: DER name
-        der_obj: DER object, class type of "OpenDER"
+        der_obj: DER object, class of "OpenDER"
     '''
     def update_der_info(self, name, der_obj):
         if self.DER_sim_type == 'PVSystem':
