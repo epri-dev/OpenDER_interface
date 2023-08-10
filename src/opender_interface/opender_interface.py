@@ -7,22 +7,24 @@ from opender_interface.voltage_regulator import VR_Model
 class OpenDERInterface:
 
     '''
-    This is the interface bridging OpenDER and multiple circuit simulators, as well as the interface connecting voltage
-    regulator (VR: class of VR_Model) and circuit simulators.
+    This is the interface bridging OpenDER and multiple power system simulators, as well as the interface connecting voltage
+    regulators (VR: class of VR_Model).
     '''
 
     '''
-    converge criteria of V,P,Q
+    Converge criteria of V,P,Q
     '''
     V_TOLERANCE = 0.000001
     Q_TOLERANCE = 0.00001
     P_TOLERANCE = 0.01
 
     '''
-    Create an OpenDERInterface object, include simulator interface object (ckt), OpenDER object (der_objs) and VR object (vr_objs)
+    Create an "OpenDERInterface" object, assigning the provided simulator interface object to the "ckt" attribute. 
+    The attribute "der_objs" refer to DER objects, which are instances of the "OpenDER" class; "vr_objs" represent
+    voltage regulator (VR) objects and are of the "VR_Model" type.
     Input parameters:
-        simulator_ckt: simulator interface object, in current version, it is OpenDSSInterface object
-        t_s: simulation time step, used for initialize OpenDER 
+        simulator_ckt: provided simulator interface object, in current version, it is an instance of the "OpenDSSInterface" class.
+        t_s: simulation time step, used for initialize "OpenDER" objects.
     '''
     def __init__(self, simulator_ckt, t_s=DER.t_s):
         self.ckt = simulator_ckt
@@ -44,16 +46,17 @@ class OpenDERInterface:
         self.ckt.cmd(command)
 
     '''
-    Initialize circuit simulator object
+    Initialize the "ckt" attribute, which corresponds to the simulator interface object, utilizing the provided configuration file.
     '''
     def initialize(self, DER_sim_type='PVSystem'):
         self.ckt.initialize(self.t_s,DER_sim_type)
 
     '''
-    Create OpenDER object, update DER nameplate information
+    Create OpenDER object based on given DER nameplate information and assign the updated object to the "der_objs" attribute
     Input parameters:
-        der_files: DERCommonFileFormat or its inheritance classes, containing DER nameplate information
-        p_pu: DER DC link available power, used for update DER input, default value is 0
+        der_files: type of "DERCommonFileFormat" or its inheritance classes, containing DER nameplate information, refer to 
+            OpenDER for more information.
+        p_pu: DER available power, indicating the upper limit of the DER output power, default value is 0
     '''
     def create_opender_objs(self, der_files, p_pu=0):
 
@@ -86,6 +89,7 @@ class OpenDERInterface:
                     self.der_objs.append(der_obj)
 
 
+
         self.__numberofders = len(self.der_objs)
 
         self.__der_files = [der_obj.der_file for der_obj in self.der_objs]
@@ -116,7 +120,7 @@ class OpenDERInterface:
         return self.der_objs
 
     '''
-    Update DER output into circuit 
+    Update DER output into circuit, refer to simulator interface for details. 
     '''
     def update_der_output_powers(self, der_list=None, p_list=None, q_list=None):
 
@@ -126,7 +130,7 @@ class OpenDERInterface:
         self.ckt.update_der_output_powers(der_list,p_list,q_list)
 
     '''
-    Set circuit substation voltage
+    Set circuit substation bus voltage
     '''
     def set_source_voltage(self, v_pu: float):
         self.ckt.set_source_voltage(v_pu)
@@ -152,15 +156,15 @@ class OpenDERInterface:
         return self.ckt.read_line_flow()
 
     '''
-    Solve circuit power flow
+    Solve circuit power flow using simulator engine
     '''
     def solve_power_flow(self):
         self.ckt.solve_power_flow()
 
     '''
-    Create VR_Model object, update VR information
+    Create VR_Model object based on given VR information, and assign the updated object to 'vr_objs' 
     Input parameters:
-        vr_list: list of vr information, containing name, tap information and so on, see example for details.
+        vr_list: list of VR information, containing name, tap information and so on, see example for details.
     '''
     def create_vr_objs(self, vr_list):
         # self.ckt.create_vr_objs(vr_list)
@@ -188,13 +192,13 @@ class OpenDERInterface:
         self.ckt.load_scaling(mult)
 
     '''
-    Read VR tap from circuit
+    Read VR tap from circuit, refer to simulator interface for details 
     '''
     def read_vr(self):
         self.ckt.read_vr()
 
     '''
-    Write VR tap from VR object into circuit
+    Write VR tap from VR object into circuit, refer to simulator interface for details 
     '''
     def write_vr(self):
         for vrname in self.vr_objs.keys():
@@ -220,10 +224,11 @@ class OpenDERInterface:
         self.ckt.disable_control()
 
     '''
-    This is the function to run OpenDER object
+    This is the function to invoke OpenDER run() function, utilizing circuit information such as DER bus voltages and etc
+    as input, to compute DER output. Refer to OpenDER for details.
     Input parameters:
-        der_objs: if given, this function will only run specified DER object, otherwise the function will run all the 
-        DER objects initialized in this class object 
+        der_objs: If provided, this function will exclusively invoke the run() function for the designated DER objects. 
+            In the absence of such specification, all DER objects in "der_objs" will have their run() functions executed.
     '''
     def run(self, der_objs=None):
 
@@ -238,6 +243,9 @@ class OpenDERInterface:
             print(der)
 
 
+    '''
+    Auxiliary function used for in-class method 'der_convergence_process'.
+    '''
     def __check_q(self):
         for i in range(self.__numberofders):
             if self.__der_files[i].QP_MODE_ENABLE or self.__der_files[i].QV_MODE_ENABLE:
@@ -334,8 +342,10 @@ class OpenDERInterface:
             self.__q_out = self.__q_inv
 
     '''
-    This is the function for running convergence process of DER. This function will run DER until P,Q,V reaches the 
-    convergence criteria or finished 100 iterations.
+    This is the function for facilitate the convergence process of DER operation. It will iteratively execute DER run() 
+    function of each DER object in "der_obj" until the convergence criteria for P, Q, V are met, or until a maximum of 
+    100 iterations is reached. This function can be regarded as an approximation of deriving the steady-state solution 
+    of the DER for the given circuit.
     '''
     def der_convergence_process(self):
         # v_control_i_list = list()
@@ -362,9 +372,9 @@ class OpenDERInterface:
 
 
     '''
-    This is the function used for update DER DC link power
+    This is the function used for update DER available power
     Input parameters:
-        p_pu_list: users provided liast of DER DC link power
+        p_pu_list: users provided DER upper limit of output power
     '''
     def update_der_p_pu(self, p_pu_list):
         for der, p_pu in zip(self.der_objs, p_pu_list):

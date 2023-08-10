@@ -10,35 +10,32 @@ from opender import DERCommonFileFormat
 
 #%%
 
+'''
+This is an example used for investigating interactions between voltage regulators and DER during service operations
+'''
+
+# circuit path
 script_path = pathlib.Path(os.path.dirname(__file__))
 circuit_folder = script_path.parents[0].joinpath("IEEE_34Bus")
 dss_file = circuit_folder.joinpath("ieee34Mod2_der.dss")
 load_file = script_path.joinpath("load_profile.xlsx")
 
-# folder and files
-home_folder = script_path.parents[0]
-save_folder = home_folder.joinpath("sim_data")
-
-
-
-#%%
 # import load profile
 load_profile = pd.read_excel(load_file, index_col=0)
 
+
+# simulation time step
 tstep = 1
 
-#%%
+#Create OpenDERInterfae
 ckt = OpenDSSInterface(str(dss_file))
 ckt_int = OpenDERInterface(ckt,t_s=tstep)
 
-# ckt_int = OpenDERInterface(str(dss_file), t_s=tstep)
+#initialize circuit
 ckt_int.initialize()
 
-#%%
-# set up simulation
 
-#%%
-# create voltage regulator controls to replace the ones in the circuit
+# create voltage regulator controls objects to replace the ones in the circuit
 vr_list = [
     {'name': 'creg1a', 'Td_ctrl': 30, 'Td_tap': 2},
     {'name': 'creg1b', 'Td_ctrl': 30, 'Td_tap': 2},
@@ -49,9 +46,7 @@ vr_list = [
     ]
 
 ckt_int.create_vr_objs(vr_list)
-#
 
-#%%
 # connect a DER to each bus and create DER model interface
 der_file = DERCommonFileFormat(NP_VA_MAX=400000,
                                NP_P_MAX=400000,
@@ -62,13 +57,11 @@ der_file = DERCommonFileFormat(NP_VA_MAX=400000,
 der_list = ckt_int.create_opender_objs(p_pu=0.8,der_files=der_file)
 
 
-#%%
 # add a fault branch to the circuit, disable the fault by setting very high impedance
 ckt_int.cmd('New Fault.F1 Phases=3 Bus1={}'.format('808'))
 ckt_int.cmd('Edit Fault.F1 R=1000000')
 
 
-# run a load flow and check the feeder total power
 sim_data = []
 t = 0
 plot_obj = TimePlots(3,1)
@@ -83,6 +76,7 @@ ckt_int.update_vr_tap()
 ckt_int.disable_control()
 
 
+# dynamic simulation
 while t < 1200:
     # event simulation
     if t > 45 and t < 50:
@@ -146,9 +140,7 @@ while t < 1200:
     t = t + tstep
 
 
-a = [ckt_int.vr_objs[vrname].total_sw for vrname in ckt_int.vr_objs.keys()]
-print(a, sum(a))
-
+# plot figure
 plot_obj.prepare()
 for ax in plot_obj.axes:
     # ax.get_legend().remove()

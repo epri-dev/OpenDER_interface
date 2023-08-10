@@ -8,6 +8,10 @@ from opender import DER, DERCommonFileFormat
 from opender_interface.time_plots import TimePlots
 from opender_interface.xy_plot import XYPlots
 
+'''
+This is an example demonstrating the dynamic behavior of isource experiencing a ground fault over voltage
+'''
+
 ## find dss file
 script_path = pathlib.Path(os.path.dirname(__file__))
 circuit_folder = script_path.joinpath("circuit")
@@ -94,7 +98,7 @@ while tsim < tend:
     # step tsim
     tsim = tsim + delt
 
-
+# plot simulation result
 plot_obj.prepare()
 plot_obj.axes[0].set_title('Transformer High Side Voltage (pu)')
 plot_obj.axes[0].get_lines()[0].set_color('brown')

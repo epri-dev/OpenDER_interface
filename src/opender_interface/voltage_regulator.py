@@ -11,12 +11,15 @@ import numpy as np
 #%%
 
 # %%
+"""
+This is the voltage regulator (VR) control model, this model is used for determining the VR tap within the provided circuit.
+"""
 class VR_Model(object):
 
-    """
-    voltage regulator control model
-    """
-
+    '''
+    Initialize "VR_Model" object, with the obligatory input parameter 'Ts', signifying the sampling time, while other
+    parameters are optional.
+    '''
     def __init__(self,
                  Ts,  # sampling time (s)
                  Td_ctrl=30,  # delay time for control (s)
@@ -51,7 +54,7 @@ class VR_Model(object):
         self.V = 0
 
     '''
-    Determine tap based on given circuit
+    Determine VR tap based on given circuit
     '''
     def run(self,
             Vreg=None,  # regulating voltage  (magnitude on 120V base)

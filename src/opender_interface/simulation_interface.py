@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 '''
-This abstract class serves as an interface for interacting with various circuit simulators. 
+This abstract class serves as an interface for interacting with various power system simulators. 
 '''
 
 class SimulationInterfacesABC(ABC):
@@ -73,7 +73,7 @@ class SimulationInterfacesABC(ABC):
         pass
 
     '''
-    Read transmission line flow
+    Read line flow
     '''
     @abstractmethod
     def read_line_flow(self):
@@ -93,6 +93,9 @@ class SimulationInterfacesABC(ABC):
     def update_der_output_powers(self, der_list, p_list=None, q_list=None):
         pass
 
+    '''
+    Set substation bus voltage
+    '''
     @abstractmethod
     def set_source_voltage(self, v_pu):
         pass
@@ -127,7 +130,7 @@ class SimulationInterfacesABC(ABC):
         pass
 
     '''
-    Read the voltage and current of VR
+    Read the voltage and current of VR from circuit
     '''
     @abstractmethod
     def read_vr_v_i(self,vr):

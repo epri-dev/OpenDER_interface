@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="460.8pt" height="345.6pt" viewBox="0 0 460.8 345.6" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2023-08-09T16:39:16.920930</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.7.1, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 345.6 
+L 460.8 345.6 
+L 460.8 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 57.6 307.584 
+L 414.72 307.584 
+L 414.72 41.472 
+L 57.6 41.472 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1"/>
+   <g id="matplotlib.axis_2"/>
+   <g id="patch_3">
+    <path d="M 57.6 307.584 
+L 57.6 41.472 
+" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 414.72 307.584 
+L 414.72 41.472 
+" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 57.6 307.584 
+L 414.72 307.584 
+" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 57.6 41.472 
+L 414.72 41.472 
+" style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 208.383613 89.098425 
+Q 194.620134 160.477502 180.856656 231.856579 
+L 184.784306 232.613917 
+Q 180.702259 237.93895 176.620213 243.263982 
+Q 174.810784 236.802942 173.001355 230.341901 
+L 176.929005 231.09924 
+Q 190.692484 159.720163 204.455962 88.341086 
+L 208.383613 89.098425 
+z
+" style="fill: #1f77b4; stroke: #ffffff; stroke-linecap: round"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 324.132103 193.113341 
+Q 269.160441 145.596097 214.188779 98.078853 
+L 211.572985 101.105009 
+Q 208.996386 94.912382 206.419787 88.719755 
+Q 212.920078 90.373149 219.420369 92.026542 
+L 216.804574 95.052698 
+Q 271.776236 142.569941 326.747897 190.087185 
+L 324.132103 193.113341 
+z
+" style="fill: #1f77b4; stroke: #ffffff; stroke-linecap: round"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 175.9643 241.374596 
+Q 244.703982 217.511186 313.443664 193.647776 
+L 312.13184 189.869004 
+Q 318.78592 190.734633 325.44 191.600263 
+Q 320.753656 196.402791 316.067313 201.20532 
+L 314.755488 197.426548 
+Q 246.015807 221.289958 177.276125 245.153368 
+L 175.9643 241.374596 
+z
+" style="fill: #1f77b4; stroke: #ffffff; stroke-linecap: round"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 237.67172 175.837467 
+Q 211.831111 205.669277 185.990501 235.501088 
+L 189.013941 238.120021 
+Q 182.817077 240.692001 176.620213 243.263982 
+Q 178.281917 236.763601 179.943622 230.263221 
+L 182.967061 232.882154 
+Q 208.807671 203.050344 234.64828 173.218533 
+L 237.67172 175.837467 
+z
+" style="fill: #a52a2a; stroke: #a52a2a; stroke-linecap: round"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 234.270282 175.182956 
+Q 221.364675 137.946923 208.459067 100.71089 
+L 204.679632 102.020801 
+Q 205.549709 95.370278 206.419787 88.719755 
+Q 211.218863 93.405411 216.017938 98.091066 
+L 212.238502 99.400978 
+Q 225.14411 136.637011 238.049718 173.873044 
+L 234.270282 175.182956 
+z
+" style="fill: #ffa500; stroke: #ffa500; stroke-linecap: round"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 236.535637 172.563593 
+Q 275.283669 179.973052 314.031702 187.382512 
+L 314.782976 183.453697 
+Q 320.111488 187.52698 325.44 191.600263 
+Q 318.984577 193.420203 312.529153 195.240142 
+L 313.280427 191.311327 
+Q 274.532395 183.901867 235.784363 176.492407 
+L 236.535637 172.563593 
+z
+" style="fill: #ffd700; stroke: #ffd700; stroke-linecap: round"/>
+   </g>
+  </g>
+ </g>
+</svg>

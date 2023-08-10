@@ -3,6 +3,11 @@ import opender
 from opender_interface.time_plots import TimePlots
 from opender_interface.xy_plot import XYPlots
 
+'''
+This is an illustrative example showcasing the functionality of the plot class, demonstrating its ability to present the
+DER information and status.
+'''
+
 ## voltage profile
 V_ss = [1, 1.03, 0.93, 1.09, 1, 0.97, 1.07, 0.91, 1]
 V = np.concatenate([[v]*30 for v in V_ss])
@@ -15,11 +20,13 @@ der_obj = opender.DER_BESS()
 der_obj.der_file.QV_MODE_ENABLE = True
 der_obj.der_file.QV_OLRT = 5
 
-
+## plot object
 tplot = TimePlots(3,1, ['Voltage [pu]', 'Power output [pu]', 'Reactive power output [pu]'])
 xyplot = XYPlots(der_obj)
+
 capture = range(20, 400, 30)
 
+## DER simulation
 for i, V in enumerate(V):
     der_obj.update_der_input(v_pu=float(V), f=60, p_dem_pu=1)
     der_obj.run()
@@ -41,7 +48,7 @@ for i, V in enumerate(V):
         xyplot.add_point_to_plot(der_obj)
         capture = capture[1:]
 
-
+## plot simulation result
 tplot.prepare()
 for ax in tplot.axes:
     ax.grid()

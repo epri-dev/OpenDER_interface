@@ -5,19 +5,19 @@ from opender_interface.opendss_interface import OpenDSSInterface
 from opender_interface.opender_interface import OpenDERInterface
 from opender import DERCommonFileFormat
 
+'''
+This is an example used for comparing OpenDSS internal inverter model with OpenDER's performance
+'''
 
-#%%
+#circuit path
 script_path = pathlib.Path(os.path.dirname(__file__))
 circuit_folder = script_path.parents[0].joinpath("IEEE_34Bus")
 dss_file = circuit_folder.joinpath("ieee34Mod2_der.dss")
 load_file = script_path.joinpath("load_profile.xlsx")
 
-# folder and files
-home_folder = script_path.parents[0]
-save_folder = home_folder.joinpath("sim_data")
-
 
 # TODO convert this to interface to generate topology automatically
+# line voltages to present in the figure
 topology = [
     [802, 806],
     [806, 808],
@@ -52,12 +52,14 @@ topology = [
     [862, 838]
 ]
 
+# create OpenDER interface
 ckt = OpenDSSInterface(str(dss_file))
 ckt_int = OpenDERInterface(ckt)
 
-
+# initialize circuit
 ckt_int.initialize(DER_sim_type='PVSystem')
 
+# This plot illustrates the variation of bus voltages along power lines
 def plot_voltage_profile(ax, data_label, data_color):
     for line in topology:
         ax.plot([ckt_int.ckt.buses['distance'].loc[str(line[0])],
@@ -67,11 +69,12 @@ def plot_voltage_profile(ax, data_label, data_color):
 
     ax.scatter(ckt_int.ckt.buses['distance'], ckt_int.ckt.buses[data_label], label=data_label, color=data_color)
 
-
+# set PV system output power
 scale = 1
 for i, PV in ckt_int.ckt.DERs.iterrows():
     name = PV['name']
     ckt_int.cmd(f'PVSystem.{name}.%Pmpp={scale * 100}')
+
 
 ckt_int.enable_control()
 ckt_int.solve_power_flow()
@@ -90,8 +93,6 @@ ax[0].grid(visible=True)
 ax[0].legend(loc=2)
 ax[0].set_title('OpenDSS')
 
-
-
 #%%
 # connect a DER to each bus
 der_file = DERCommonFileFormat(NP_VA_MAX=400000,
@@ -105,10 +106,7 @@ der_list = ckt_int.create_opender_objs(der_file, p_pu=scale)
 
 
 # run a load flow and check the feeder total power
-
 ckt_int.der_convergence_process()
-
-#################
 
 plot_voltage_profile(ax[1],'Vpu_A','blue')
 plot_voltage_profile(ax[1],'Vpu_B','orange')

@@ -1,5 +1,6 @@
 import sys
-
+import os
+import pathlib
 import matplotlib.pyplot as plt
 import numpy as np
 import opender.der
@@ -9,48 +10,62 @@ from matplotlib.animation import FuncAnimation
 import matplotlib
 import time
 
-matplotlib.rcParams['animation.ffmpeg_path'] = r'C:\Users\pyma001\Box\_Documents\ffmpeg.exe'
-
-mpl_dict = {'figure.facecolor': 'white',
- 'axes.labelcolor': '.15',
- 'xtick.direction': 'out',
- 'ytick.direction': 'out',
- 'xtick.color': '.15',
- 'ytick.color': '.15',
- 'axes.axisbelow': True,
- 'grid.linestyle': '--',
- 'text.color': '.15',
- 'font.family': ['sans-serif'],
- 'font.sans-serif': ['Arial', 'DejaVu Sans', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif'],
- 'lines.solid_capstyle': 'round',
- 'patch.edgecolor': 'w',
- 'patch.force_edgecolor': True,
- # 'image.cmap': 'rocket',
- 'xtick.top': False,
- 'ytick.right': False,
- 'axes.grid': True,
- 'axes.facecolor': 'white',
- 'axes.edgecolor': '.8',
- 'grid.color': '.8',
- 'axes.spines.left': True,
- 'axes.spines.bottom': True,
- 'axes.spines.right': True,
- 'axes.spines.top': True,
- 'xtick.bottom': False,
- 'ytick.left': False}
-
-for key, value in mpl_dict.items():
-    matplotlib.rcParams[key] = value
+'''
+Set plot style
+'''
+script_path = pathlib.Path(os.path.dirname(__file__))
+plt.style.use(str(script_path)+'/mystyle.mplstyle')
 
 
+# region This parameter is configured for animation. If you intend to utilize this function, please uncomment this command line and set the appropriate path accordingly.
+# matplotlib.rcParams['animation.ffmpeg_path'] = r'C:\Users\pyma001\Box\_Documents\ffmpeg.exe'
+# endregion
 
+
+# mpl_dict = {'figure.facecolor': 'white',
+#  'axes.labelcolor': '.15',
+#  'xtick.direction': 'out',
+#  'ytick.direction': 'out',
+#  'xtick.color': '.15',
+#  'ytick.color': '.15',
+#  'axes.axisbelow': True,
+#  'grid.linestyle': '--',
+#  'text.color': '.15',
+#  'font.family': ['sans-serif'],
+#  'font.sans-serif': ['Arial', 'DejaVu Sans', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif'],
+#  'lines.solid_capstyle': 'round',
+#  'patch.edgecolor': 'w',
+#  'patch.force_edgecolor': True,
+#  # 'image.cmap': 'rocket',
+#  'xtick.top': False,
+#  'ytick.right': False,
+#  'axes.grid': True,
+#  'axes.facecolor': 'white',
+#  'axes.edgecolor': '.8',
+#  'grid.color': '.8',
+#  'axes.spines.left': True,
+#  'axes.spines.bottom': True,
+#  'axes.spines.right': True,
+#  'axes.spines.top': True,
+#  'xtick.bottom': False,
+#  'ytick.left': False}
+
+# for key, value in mpl_dict.items():
+#     matplotlib.rcParams[key] = value
+
+'''
+This is the plot class utilized for creating steady state figures depicting DER operation information, including 
+voltage-reactive power, active power-reactive power, frequency-active power, etc.
+'''
 class XYPlots:
+
+    '''
+    Initialization with 'der_obj' (instance of class "OpenDER") as the input parameter.
+    '''
     def __init__(self, der_obj):
+
         self.der_obj = der_obj
-
         self.der_file = self.der_obj.der_file
-
-
 
         self._kva = self.der_obj.der_file.NP_VA_MAX
         self._kvar_inj = self.der_obj.der_file.NP_Q_MAX_INJ
@@ -73,6 +88,9 @@ class XYPlots:
         self.fig_vq = None
         self.fig_pf = None
 
+    '''
+    Save figure as svg file in given path
+    '''
     def save_fig(self, path):
         if self.fig_pq is not None:
             self.fig_pq.savefig(path+'_pq.svg', format='svg', dpi=1200)
@@ -85,11 +103,17 @@ class XYPlots:
         if self.fig_pf is not None:
             self.fig_pf.savefig(path + '_pf.svg', format='svg', dpi=1200)
 
+    '''
+    Set figure title and label.
+    '''
     def set_title_labels(self, axes, title, xlabel, ylabel):
         axes.set_title(title)
         axes.set_xlabel(xlabel)
         axes.set_ylabel(ylabel)
 
+    '''
+    Transform DER object operation information into plot-ready data points.
+    '''
     def add_point_to_plot(self, der_obj=None):
         if der_obj is None:
             der_obj = self.der_obj
@@ -105,6 +129,9 @@ class XYPlots:
             'freq_hz': der_obj.der_input.freq_hz
         })
 
+    '''
+    Transform DER measurement information into plot-ready data points.
+    '''
     def add_measurement_to_plot(self, V=None, P=None, Q=None, F=None):
         self.meas_points_dict.append({
             'V':V,
@@ -113,37 +140,28 @@ class XYPlots:
             'F':F,
         })
 
-    def prepare_ani(self):
-        print('preparing animations')
-
-        self.plot_points = pd.DataFrame(self.plot_points_dict)
-        self.point = self.ax.scatter(0, 0, s=60, color='blue')
-        self.point_hollow = self.ax.scatter(0, 0, s=80,
-                                            facecolors='none', edgecolors='green')
-
-        self.ani = FuncAnimation(self.fig, self.animate, interval=100, blit=True,save_count=int(len(self.plot_points)*1.1))
-
-
+    '''
+    Show figure
+    '''
     def show(self):
         plt.show()
 
-    def save_ani(self,path='fig.mp4'):
-        print(f'Saving animations to {path}', end=' ')
-        start = time.perf_counter()
-        self.ani.save(path, fps=25, extra_args=['-vcodec', 'libx264'])
-        print(f"... Completed in {time.perf_counter()-start:.1f}s")
 
-
+    '''
+    Convert pu value to kVAR
+    '''
     def calc_kvar(self, value):
         return value * self.der_file.NP_VA_MAX / 1000
 
+    '''
+    Convert pu value to kW
+    '''
     def calc_kw(self, value):
         return value * self.der_file.NP_P_MAX / 1000 if value > 0 else value * self.der_file.NP_P_MAX_CHARGE / 1000
 
-
-
-
-
+    '''
+    Plot active power-reactive power curve
+    '''
     def prepare_pq_plot(self, pu=True):
 
         self.fig_pq, self.ax_pq = plt.subplots(nrows=1, ncols=1)
@@ -353,42 +371,12 @@ class XYPlots:
             self.ax_pq.legend(loc=1)
         else:
             self.ax_pq.legend(loc=2)
-    def animate(self, i):
-        self.point.remove()  # update the ata
-
-        if i>=len(self.plot_points):
-            i=len(self.plot_points)-1
-        self.point = self.ax_pq.scatter(self.plot_points['p_out_kw'].values[i],
-                                     self.plot_points['q_out_kvar'].values[i], s=60, color='blue')
-
-        self.point_hollow.remove()
-        self.point_hollow = self.ax_pq.scatter(self.calc_kw(self.plot_points['p_desired_pu'].values[i]),
-                                            self.calc_kvar(self.plot_points['q_desired_pu'].values[i]), s=80,
-                                            facecolors='none', edgecolors='green')
-        # print(self.const_pf_fig_obj)
-        v=self.plot_points['v_meas_pu'].values[i]
-        self.time_text.set_text(f't={(i-2)*opender.der.DER.t_s:.1f}\r\nv_pu={v:.1f}')
-
-        if self.plot_points['CONST_PF_MODE_ENABLE'].values[i]:
-            pf=self.plot_points['CONST_PF'].values[i]
-
-            if self.plot_points['CONST_PF_EXCITATION'].values[i]== "INJ":
-                sign = 1
-            elif self.plot_points['CONST_PF_EXCITATION'].values[i] == "ABS":
-                sign = -1
-
-            p = self._kva * pf
-            q = sign * self._kva * np.sqrt(1 - pf ** 2)
-            self.const_pf_fig_obj.remove()
-            self.const_pf_fig_obj, = self.ax_pq.plot([0, p], [0, q], color='yellow', label=f"{pf} Power Factor")
-        else:
-            self.const_pf_fig_obj.remove()
-            self.const_pf_fig_obj, = self.ax_pq.plot([], [], color='yellow')
-
-        return self.point, self.point_hollow, self.time_text,self.const_pf_fig_obj
 
 
 
+    '''
+    Plot voltage-reactive power curve
+    '''
     def prepare_vq_plot(self, pu=True):
         self.fig_vq, self.ax_vq = plt.subplots(nrows=1, ncols=1)
         self.plot_points = pd.DataFrame(self.plot_points_dict)
@@ -438,6 +426,9 @@ class XYPlots:
 
         self.ax_vq.legend(loc=1)
 
+    '''
+    Plot voltage-active power curve
+    '''
     def prepare_vp_plot(self):
         self.fig_vp, self.ax_vp = plt.subplots(nrows=1, ncols=1)
         self.plot_points = pd.DataFrame(self.plot_points_dict)
@@ -472,7 +463,9 @@ class XYPlots:
 
 
 
-
+    '''
+    Plot voltage vector chart.
+    '''
     def prepare_v3_plot(self,l2l=False, xy=None):
 
         self.fig_v3, self.ax_v3 = plt.subplots(nrows=1, ncols=1)
@@ -530,6 +523,9 @@ class XYPlots:
         self.ax_v3.set_ylim(-max(x_a, x_b, x_c,y_a, y_b, y_c)*2, max(x_a, x_b, x_c, y_a, y_b, y_c)*2)
         plt.axis('equal')
 
+    '''
+    Plot frequency-active power curve
+    '''
     def prepare_pf_plot(self, p_pre_list, p_avl_list=None, pu=True):
 
         self.fig_pf, self.ax_pf = plt.subplots(nrows=1, ncols=1)
@@ -595,3 +591,56 @@ class XYPlots:
         self.ax_pf.legend(loc=1)
         self.ax_pf.set_ylim(0,1.05)
         self.set_title_labels(self.ax_pf, 'Freq-droop', "Frequency (Hz)", "Active Power (pu)")
+
+
+    # region This region is used for animation
+    def prepare_ani(self):
+        print('preparing animations')
+
+        self.plot_points = pd.DataFrame(self.plot_points_dict)
+        self.point = self.ax.scatter(0, 0, s=60, color='blue')
+        self.point_hollow = self.ax.scatter(0, 0, s=80,
+                                            facecolors='none', edgecolors='green')
+
+        self.ani = FuncAnimation(self.fig, self.animate, interval=100, blit=True,
+                                 save_count=int(len(self.plot_points) * 1.1))
+
+    def animate(self, i):
+        self.point.remove()  # update the ata
+
+        if i>=len(self.plot_points):
+            i=len(self.plot_points)-1
+        self.point = self.ax_pq.scatter(self.plot_points['p_out_kw'].values[i],
+                                     self.plot_points['q_out_kvar'].values[i], s=60, color='blue')
+
+        self.point_hollow.remove()
+        self.point_hollow = self.ax_pq.scatter(self.calc_kw(self.plot_points['p_desired_pu'].values[i]),
+                                            self.calc_kvar(self.plot_points['q_desired_pu'].values[i]), s=80,
+                                            facecolors='none', edgecolors='green')
+        # print(self.const_pf_fig_obj)
+        v=self.plot_points['v_meas_pu'].values[i]
+        self.time_text.set_text(f't={(i-2)*opender.der.DER.t_s:.1f}\r\nv_pu={v:.1f}')
+
+        if self.plot_points['CONST_PF_MODE_ENABLE'].values[i]:
+            pf=self.plot_points['CONST_PF'].values[i]
+
+            if self.plot_points['CONST_PF_EXCITATION'].values[i]== "INJ":
+                sign = 1
+            elif self.plot_points['CONST_PF_EXCITATION'].values[i] == "ABS":
+                sign = -1
+
+            p = self._kva * pf
+            q = sign * self._kva * np.sqrt(1 - pf ** 2)
+            self.const_pf_fig_obj.remove()
+            self.const_pf_fig_obj, = self.ax_pq.plot([0, p], [0, q], color='yellow', label=f"{pf} Power Factor")
+        else:
+            self.const_pf_fig_obj.remove()
+            self.const_pf_fig_obj, = self.ax_pq.plot([], [], color='yellow')
+
+        return self.point, self.point_hollow, self.time_text,self.const_pf_fig_obj
+    def save_ani(self,path='fig.mp4'):
+        print(f'Saving animations to {path}', end=' ')
+        start = time.perf_counter()
+        self.ani.save(path, fps=25, extra_args=['-vcodec', 'libx264'])
+        print(f"... Completed in {time.perf_counter()-start:.1f}s")
+    # endregion

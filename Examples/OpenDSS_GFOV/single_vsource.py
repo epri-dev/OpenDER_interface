@@ -8,10 +8,14 @@ from opender import DER, DERCommonFileFormat
 from opender_interface.time_plots import TimePlots
 from opender_interface.xy_plot import XYPlots
 
+'''
+This is an example demonstrating the dynamic behavior of vsource experiencing a ground fault over voltage
+'''
 
 # substation initial voltage
 vsub0 = 1.00
 
+# circuit configuration path
 script_path = pathlib.Path(os.path.dirname(__file__))
 circuit_folder = script_path.joinpath("circuit")
 dss_file = circuit_folder.joinpath("single_vsource_gfov.dss")
@@ -20,14 +24,15 @@ dss_file = circuit_folder.joinpath("single_vsource_gfov.dss")
 delt = 0.0004  # sampling time step (s)
 
 
-# %%
 
+# create OpenDERInterface
 ckt = OpenDSSInterface(str(dss_file))
 ckt_int = OpenDERInterface(ckt,t_s=delt)
 
-# ckt_int = OpenDERInterface(dss_file, t_s=delt)
+# initialize circuit
 ckt_int.initialize(DER_sim_type='vsource',)
 
+# initialize DER object
 der_file = DERCommonFileFormat(NP_VA_MAX=100000,
                                NP_P_MAX=100000,
                                NP_Q_MAX_INJ=44000,
@@ -54,11 +59,14 @@ tevt2 = 0.4
 tend = 0.6  # total simulation time (s)
 
 vsub = vsub0
+
+# create plot objects
 plot_obj = TimePlots(3,1)
 v_plt_load = XYPlots(der_list[0])
 v_plt_derh = XYPlots(der_list[0])
 v_plt_derl = XYPlots(der_list[0])
 
+# simulation
 while tsim < tend:
     # step reference / perturbation
 
@@ -100,6 +108,7 @@ while tsim < tend:
     ckt_int.read_sys_voltage()
     tsim = tsim + delt
 
+# plot result
 plot_obj.prepare()
 plot_obj.show()
 

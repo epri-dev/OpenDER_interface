@@ -32,7 +32,9 @@ class OpenDSSInterface(SimulationInterfacesABC):
     # class method
     # ******************************************************************************************************************
     '''
-    To create an OpenDSSInterface object and compile the DSS file provided as input with the name "dss_file"
+    To create an "OpenDSSInterface" object
+    Input parameter:
+        dss_file: the specific dss file to be compiled
     '''
     def __init__(self, dss_file: str) -> None:
 
@@ -46,7 +48,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
         self._vrStates = {}
 
     '''
-    Compile DSS command from user
+    Compile dss command from user
     '''
     def cmd(self,cmd_line):
         if type(cmd_line) is list:
@@ -58,10 +60,11 @@ class OpenDSSInterface(SimulationInterfacesABC):
 
 
     '''
-    Initialize OpenDSSInterface object, including buses, lines, loads, generators, DERs, and vrStates.
-    Input paramters:
-        t_s: simulation time step, used for initialize vrStates
-        DER_sim_type: DER type, the default DER type is "PVSystem".
+    Initialize "OpenDSSInterface" object based on given dss file, including the attributes of "buses", "lines", "loads",
+    "generators", as well as "DERs" and "vrStates".
+    Input parameters:
+        t_s: simulation time step, used for initialize "vrStates"
+        DER_sim_type: DER type, used for initialize "DERs". The default type is "PVSystem".
     '''
     def initialize(self, t_s, DER_sim_type = 'PVSystem',):
         self.__init_buses()
@@ -88,7 +91,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
             # self.DER_sim_type = 'generator'
 
     '''
-    Initialize buses based on dss file    
+    Initialize "buses" based on dss file    
     '''
     def __init_buses(self):
         nodenames = list(self.dss.circuit_all_node_names())
@@ -134,7 +137,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
         })
 
     '''
-    Initialize lines based on dss file    
+    Initialize "lines" based on dss file    
     '''
     def __init_lines(self):
         linenames = list(self.dss.lines_all_names())
@@ -167,7 +170,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
         })
 
     '''
-    Initialize loads based on dss file
+    Initialize "loads" based on dss file
     '''
     def __init_loads(self):
         loadnames = self.dss.loads_all_names()
@@ -195,7 +198,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
             self.loads.set_index('name', inplace=True)
 
     '''
-    Initialize generators based on dss file
+    Initialize "generators" based on dss file
     '''
     def __init_generators(self):
         gennames = list(self.dss.generators_all_names())
@@ -225,7 +228,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
         # self.DERs.set_index('name', inplace=True)
 
     '''
-    Initialize DERs of type "PVSystem" based on dss file
+    Initialize "DERs" of type "PVSystem" based on dss file
     '''
     def __init_PVSystems(self):
         PVnames = list(self.dss.pvsystems_all_names())
@@ -256,7 +259,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
         # self.DERs.set_index('name', inplace=True)
 
     '''
-    Initialize DERs of type "isources" based on dss file
+    Initialize "DERs" of type "isources" based on dss file
     '''
     def __init_isources(self):
         PVnames = list(self.dss.isources_all_names())
@@ -290,7 +293,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
         # self.DERs.set_index('name', inplace=True)
 
     '''
-    Initialize DERs of type "vsource" based on dss file
+    Initialize "DERs" of type "vsource" based on dss file
     '''
     def __init_vsources(self):
         PVnames = list(self.dss.vsources_all_names())[1:]
@@ -323,8 +326,8 @@ class OpenDSSInterface(SimulationInterfacesABC):
     '''
     Update DER nameplate information into dss circuit.
     Input parameters:
-        name: DER name
-        der_obj: DER object, class of "OpenDER"
+        name: name of the specific DER to be updated
+        der_obj: DER object, an instance of the "OpenDER" class, containing DER nameplate information
     '''
     def update_der_info(self, name, der_obj):
         if self.DER_sim_type == 'PVSystem':
@@ -368,7 +371,7 @@ class OpenDSSInterface(SimulationInterfacesABC):
 
     '''
     Scaling load of circuit
-    Input parmeter:
+    Input parameter:
         mult: scaling factor
     '''
     def load_scaling(self, mult=1.0):
@@ -381,12 +384,12 @@ class OpenDSSInterface(SimulationInterfacesABC):
 
 
     '''
-    Update DER output information to dss circuit. 
+    Update DER output information "p_list" and "q_list" to dss circuit. 
     For "PVSystem" and "generator", the updated information is P and Q;
     For "isource", the updated information is current;
     For "vsource", the updated information is voltage.
     Input parameters:
-        der_list: list of DER object
+        der_list: list of DER object to be updated
         p_list: DER object output real power, if not given, p_list is generated from DER object attribute: p_out_kw
         p_list: DER object output reactive power, if not given, p_list is generated from DER object attribute: q_out_kvar
     '''
@@ -439,7 +442,9 @@ class OpenDSSInterface(SimulationInterfacesABC):
         #               f"kw={p_out_kw} "
         #               f"kvar={q_out_kvar}")
 
-
+    '''
+    Solve circuit power flow using dss engine
+    '''
     def solve_power_flow(self) -> None:
         self.dss.text("solve")
 
@@ -508,11 +513,14 @@ class OpenDSSInterface(SimulationInterfacesABC):
                     self.lines.loc[linename, 'flowS_{}'.format(phase)] = s
                     ii = ii + 1
 
+    '''
+    Set dss circuit substation bus voltage
+    '''
     def set_source_voltage(self, v_pu: float) -> None:
         self.dss.vsources_write_pu(v_pu)
 
     '''
-    Initialize vrStates based on dss file
+    Initialize "vrStates" based on dss file
     '''
     def __init_vr(self,t_s):
         # self.vrStates = []
