@@ -2,44 +2,43 @@ import py_dss_interface
 import numpy as np
 import pandas as pd
 import cmath
-from opender_interface.simulation_interface import SimulationInterfacesABC
+from opender_interface.dx_tool_interface import DxToolInterfacesABC
 
-'''
-This is the OpenDSS interface, which is an inheritance class of SimulationInterfacesABC
-'''
 
-class OpenDSSInterface(SimulationInterfacesABC):
 
-    # ******************************************************************************************************************
-    # class member
-    # ******************************************************************************************************************
+class OpenDSSInterface(DxToolInterfacesABC):
     '''
-    Used for record DER information
+    This is the OpenDSS interface, which is an inheritance class of DxToolInterfacesABC
     '''
+
     @property
     def DERs(self):
+        '''
+        Used for record DER information
+        '''
         return self._DERs
 
-    '''
-    Used for record voltage regulator (VR) information
-    '''
+
     @property
     def vrStates(self):
+        '''
+        Used for record voltage regulator (VR) information
+        '''
         return self._vrStates
 
 
-    # ******************************************************************************************************************
-    # class method
-    # ******************************************************************************************************************
-    '''
-    To create an "OpenDSSInterface" object
-    Input parameter:
-        dss_file: the specific dss file to be compiled
-    '''
+
     def __init__(self, dss_file: str) -> None:
+        '''
+        To create an "OpenDSSInterface" object
+
+        Input parameter:
+
+        :param dss_file: the specific dss file to be compiled
+        '''
 
         self.dss_file = dss_file
-        self.dss = py_dss_interface.DSSDLL()
+        self.dss = py_dss_interface.DSS()
         self.der_bus_list = []
 
         self.dss.text(f"Compile [{self.dss_file}]")
@@ -47,10 +46,10 @@ class OpenDSSInterface(SimulationInterfacesABC):
         self._DERs = []
         self._vrStates = {}
 
-    '''
-    Compile dss command from user
-    '''
     def cmd(self,cmd_line):
+        '''
+        Compile dss command from user
+        '''
         if type(cmd_line) is list:
             return [self.dss.text(cmd) for cmd in cmd_line]
         elif type(cmd_line) is str:
@@ -59,22 +58,21 @@ class OpenDSSInterface(SimulationInterfacesABC):
             raise ValueError("OpenDSS Initializing cmd_list is not valid")
 
 
-    '''
-    Initialize "OpenDSSInterface" object based on given dss file, including the attributes of "buses", "lines", "loads",
-    "generators", as well as "DERs" and "vrStates".
-    Input parameters:
-        t_s: simulation time step, used for initialize "vrStates"
-        DER_sim_type: DER type, used for initialize "DERs". The default type is "PVSystem".
-    '''
-    def initialize(self, t_s, DER_sim_type = 'PVSystem',):
+
+    def initialize(self, t_s, DER_sim_type = 'PVSystem'):
+        '''
+        Initialize "OpenDSSInterface" object based on given dss file, including the attributes of "buses", "lines", "loads",
+        "generators", as well as "DERs" and "vrStates".
+        Input parameters:
+            t_s: simulation time step, used for initialize "vrStates"
+            DER_sim_type: DER type, used for initialize "DERs". The default type is "PVSystem".
+        '''
         self.__init_buses()
         self.__init_lines()
         self.__init_loads()
         self.__init_generators()
         self.__init_vr(t_s)
         self.DER_sim_type = DER_sim_type
-
-
 
         if DER_sim_type == 'PVSystem':
             self.__init_PVSystems()
@@ -90,14 +88,15 @@ class OpenDSSInterface(SimulationInterfacesABC):
             self.der_bus_list = self.gen_bus_list
             # self.DER_sim_type = 'generator'
 
-    '''
-    Initialize "buses" based on dss file    
-    '''
+
     def __init_buses(self):
-        nodenames = list(self.dss.circuit_all_node_names())
+        '''
+        Initialize "buses" based on dss file
+        '''
+        nodenames = list(self.dss.circuit.nodes_names)
         buses = []
-        for busname in self.dss.circuit_all_bus_names():
-            self.dss.circuit_set_active_bus(busname)
+        for busname in self.dss.circuit.buses_names:
+            self.dss.circuit.set_active_bus(busname)
             try:
                 idx_A = nodenames.index('{}.{}'.format(busname, 1))
             except ValueError:
@@ -112,11 +111,11 @@ class OpenDSSInterface(SimulationInterfacesABC):
                 idx_C = -1
             buses.append({
                 'name': busname,
-                'kVBaseLL': self.dss.bus_kv_base() * np.sqrt(3),
-                'nPhases': self.dss.bus_num_nodes(),
-                'distance': self.dss.bus_distance() * 0.621371, #km to miles
-                'x': self.dss.bus_read_x(),
-                'y': self.dss.bus_read_y(),
+                'kVBaseLL': self.dss.bus.kv_base * np.sqrt(3),
+                'nPhases': self.dss.bus.num_nodes,
+                'distance': self.dss.bus.distance * 0.621371, #km to miles
+                'x': self.dss.bus.x,
+                'y': self.dss.bus.y,
                 'nodeIndex_A': idx_A,
                 'nodeIndex_B': idx_B,
                 'nodeIndex_C': idx_C,
@@ -140,22 +139,22 @@ class OpenDSSInterface(SimulationInterfacesABC):
     Initialize "lines" based on dss file    
     '''
     def __init_lines(self):
-        linenames = list(self.dss.lines_all_names())
+        linenames = list(self.dss.lines.names)
         lines = []
         for linename in linenames:
-            self.dss.lines_write_name(linename)
-            bus1 = self.dss.lines_read_bus1().split('.')[0]
-            bus2 = self.dss.lines_read_bus2().split('.')[0]
-            self.dss.circuit_set_active_bus(bus1)
+            self.dss.lines.name = linename
+            bus1 = self.dss.lines.bus1.split('.')[0]
+            bus2 = self.dss.lines.bus2.split('.')[0]
+            self.dss.circuit.set_active_bus(bus1)
             lines.append({
                 'name': linename,
                 'bus1': bus1,
                 'bus2': bus2,
-                'kVBaseLN': self.dss.bus_kv_base(),
-                'nPhases': self.dss.lines_read_phases(),
-                'length': self.dss.lines_read_length(),
-                'normamps': self.dss.lines_read_norm_amps(),
-                'emergamps': self.dss.lines_read_emerg_amps(),
+                'kVBaseLN': self.dss.bus.kv_base,
+                'nPhases': self.dss.lines.phases,
+                'length': self.dss.lines.length,
+                'normamps': self.dss.lines.norm_amps,
+                'emergamps': self.dss.lines.emerg_amps,
                 'flowI_A': 0 + 1j * 0,
                 'flowI_B': 0 + 1j * 0,
                 'flowI_C': 0 + 1j * 0,
@@ -173,11 +172,13 @@ class OpenDSSInterface(SimulationInterfacesABC):
     Initialize "loads" based on dss file
     '''
     def __init_loads(self):
-        loadnames = self.dss.loads_all_names()
+        loadnames = self.dss.loads.names
+        if loadnames[0] == 'NONE':
+            loadnames = []
         loads = []
         for loadname in loadnames:
-            self.dss.loads_write_name(loadname)
-            kw = self.dss.loads_read_kw()
+            self.dss.loads.name=loadname
+            kw = self.dss.loads.kw
             bus = self.dss.text(f'? load.{loadname}.bus1')
             phases = int(self.dss.text(f'? load.{loadname}.phases'))
             # if loadname[0].lower() == 'l':
@@ -201,15 +202,16 @@ class OpenDSSInterface(SimulationInterfacesABC):
     Initialize "generators" based on dss file
     '''
     def __init_generators(self):
-        gennames = list(self.dss.generators_all_names())
+        gennames = list(self.dss.generators.names)
+        if gennames[0] == 'NONE':
+            gennames = []
         self.gen_bus_list = []
         gens = []
         for genname in gennames:
-            self.dss.generators_write_name(genname)
-            kw = self.dss.generators_read_kw()
-            kvar = self.dss.generators_read_kvar()
-            kVA = self.dss.generators_read_kva_rated()
-            self.dss.pvsystems_kw()
+            self.dss.generators.name=genname
+            kw = self.dss.generators.kw
+            kvar = self.dss.generators.kvar
+            kVA = self.dss.generators.kva
             bus = self.dss.text(f'? generator.{genname}.bus1')
             kV = float(self.dss.text(f'? generator.{genname}.kv'))
             this_type = 'generator'
@@ -231,19 +233,21 @@ class OpenDSSInterface(SimulationInterfacesABC):
     Initialize "DERs" of type "PVSystem" based on dss file
     '''
     def __init_PVSystems(self):
-        PVnames = list(self.dss.pvsystems_all_names())
+        PVnames = list(self.dss.pvsystems.names)
+        if PVnames[0] == 'NONE':
+            PVnames = []
         PVs = []
         for PVname in PVnames:
-            self.dss.pvsystems_write_name(PVname)
-            kw = self.dss.pvsystems_read_pmpp()
-            # kvar = self.ckt_int.pvsystems_read_kvar() #TODO check with Paulo, seems that it always get 0
-            kVA = self.dss.pvsystems_read_kva_rated()
+            self.dss.pvsystems.name = PVname
+            kw = self.dss.pvsystems.pmpp
+            kvar = self.dss.pvsystems.kvar #TODO check with Paulo, seems that it always get 0
+            kVA = self.dss.pvsystems.kva
             bus = self.dss.text(f'? PVSystem.{PVname}.bus1')
-            kvar = float(self.dss.text(f'? PVSystem.{PVname}.kvarmax'))
+            # kvar = float(self.dss.text(f'? PVSystem.{PVname}.kvarmax'))
             kvarabs = float(self.dss.text(f'? PVSystem.{PVname}.kvarmaxabs'))
             kV = float(self.dss.text(f'? PVSystem.{PVname}.kv'))
             this_type = 'PVSystem'
-            PVs.append({ #TODO make consistent with CYMEInterface
+            PVs.append({
                 'name':PVname,
                 'type': this_type,
                 'bus': bus.split('.')[0].replace(' ', ''),
@@ -262,19 +266,19 @@ class OpenDSSInterface(SimulationInterfacesABC):
     Initialize "DERs" of type "isources" based on dss file
     '''
     def __init_isources(self):
-        PVnames = list(self.dss.isources_all_names())
+        PVnames = list(self.dss.isources.names)
         PVs = []
         PVnames = [PVname.split('_')[0].replace(' ', '') for PVname in PVnames]
         PVnames = [*set(PVnames)]
         for PVname in PVnames:
-            self.dss.isources_write_name(f'{PVname}_a')
+            self.dss.isources.name=f'{PVname}_a'
             # kw = self.ckt_int.pvsystems_read_pmpp()
             # kVA = self.ckt_int.pvsystems_read_kva_rated()
             bus = self.dss.text(f'? isource.{PVname}_a.bus1')
             # kvar = float(self.ckt_int.text(f'? PVSystem.{PVname}.kvarmax'))
             # kvarabs = float(self.ckt_int.text(f'? PVSystem.{PVname}.kvarmaxabs'))
-            self.dss.circuit_set_active_bus(bus)
-            kV = self.dss.bus_kv_base() * 1.7320508075688 #TODO make sure this is correct
+            self.dss.circuit.set_active_bus(bus)
+            kV = self.dss.bus.kv_base * 1.7320508075688
 
             this_type = 'isource'
             PVs.append({  # TODO make consistent with CYMEInterface
@@ -296,17 +300,17 @@ class OpenDSSInterface(SimulationInterfacesABC):
     Initialize "DERs" of type "vsource" based on dss file
     '''
     def __init_vsources(self):
-        PVnames = list(self.dss.vsources_all_names())[1:]
+        PVnames = list(self.dss.vsources.names)[1:] # First one is substation
         PVs = []
         PVnames = [PVname.split('_')[0].replace(' ', '') for PVname in PVnames]
         PVnames = [*set(PVnames)]
         for PVname in PVnames:
-            self.dss.vsources_write_name(f'{PVname}_a')
+            self.dss.vsources.name=f'{PVname}_a'
             kw = float(self.dss.text(f'? vsource.{PVname}_a.baseMVA')) * 1000
             kVA = float(self.dss.text(f'? vsource.{PVname}_a.baseMVA')) * 1000
             bus = self.dss.text(f'? vsource.{PVname}_a.bus1')
-            self.dss.circuit_set_active_bus(bus)
-            kV = self.dss.bus_kv_base() * 1.7320508075688 #TODO make sure this is correct
+            self.dss.circuit.set_active_bus(bus)
+            kV = self.dss.bus.kv_base * 1.7320508075688
 
             this_type = 'vsource'
             PVs.append({  # TODO make consistent with CYMEInterface
@@ -341,12 +345,12 @@ class OpenDSSInterface(SimulationInterfacesABC):
             pass
 
         if self.DER_sim_type == 'vsource':
-            self.dss.vsources_write_name(f'{name}_a')
+            self.dss.vsources.name=f'{name}_a'
             kVA = der_obj.der_file.NP_VA_MAX/1000
             bus = self.dss.text(f'? vsource.{name}_a.bus1')
-            self.dss.circuit_set_active_bus(bus)
+            self.dss.circuit.set_active_bus(bus)
 
-            kV = self.dss.bus_kv_base() * 1.7320508075688 #TODO make sure this is correct
+            kV = self.dss.bus.kv_base * 1.7320508075688
             R = der_obj.der_file.NP_RESISTANCE * kV * kV / kVA * 1000
             X = der_obj.der_file.NP_REACTANCE * kV * kV / kVA * 1000
             self.dss.text(f'vsource.{name}_a.R0 = {R}')
@@ -379,8 +383,8 @@ class OpenDSSInterface(SimulationInterfacesABC):
         for name in self.loads.index:
             if self.loads.loc[name, 'type'] == 'load':
                 new_kw = self.loads.loc[name, 'kw'] * mult
-                self.dss.loads_write_name(name)
-                self.dss.loads_write_kw(float(new_kw))
+                self.dss.loads.name = name
+                self.dss.loads.kw = float(new_kw)
 
 
     '''
@@ -453,15 +457,15 @@ class OpenDSSInterface(SimulationInterfacesABC):
     Attribute "nodevolts" record bus voltages in "volts", "buses" record bus voltages in "pu" 
     '''
     def read_sys_voltage(self):
-        nodenames = self.dss.circuit_all_node_names()
-        temp = self.dss.circuit_all_bus_volts()
+        nodenames = self.dss.circuit.nodes_names
+        temp = self.dss.circuit.buses_volts
         nodevolts = [temp[2 * ii] + 1j * temp[2 * ii + 1] for ii in range(len(nodenames))]
         self.nodevolts = pd.DataFrame(nodevolts, index=nodenames, columns=['volts'])
 
         nodeangles = [cmath.phase(temp[2 * ii] + 1j * temp[2 * ii + 1]) for ii in range(len((nodenames)))]
         busnames = self.buses.index
         for phase in ['A', 'B', 'C']:
-            self.buses['Vpu_{}'.format(phase)] = np.array(self.dss.circuit_all_bus_vmag_pu())[self.buses['nodeIndex_{}'.format(phase)][busnames]]
+            self.buses['Vpu_{}'.format(phase)] = np.array(self.dss.circuit.buses_vmag_pu)[self.buses['nodeIndex_{}'.format(phase)][busnames]]
             self.buses['Theta_{}'.format(phase)] = np.array(nodeangles)[self.buses['nodeIndex_{}'.format(phase)][busnames]]
 
                 
@@ -494,17 +498,17 @@ class OpenDSSInterface(SimulationInterfacesABC):
     def read_line_flow(self):
         linenames = self.lines.index
         for linename in linenames:
-            self.dss.circuit_set_active_element('line.{}'.format(linename))
+            self.dss.circuit.set_active_element('line.{}'.format(linename))
             ii = 0
-            phases_num = self.dss.cktelement_read_bus_names()[0].split('.')[1:]
+            phases_num = self.dss.cktelement.bus_names[0].split('.')[1:]
             phases = [chr(int(i)+64) for i in phases_num]
             if phases == []:
                 phases = ['A', 'B', 'C']
 
             for phase in phases:
                 if ('_'+phase.lower() in linename) or ('_'+phase in linename) or (not(('_a' in linename)or('_b' in linename)or('_c' in linename))):
-                    v = self.dss.cktelement_voltages()[2 * ii] + 1j * self.dss.cktelement_voltages()[2 * ii + 1]
-                    s = self.dss.cktelement_powers()[2 * ii] + 1j * self.dss.cktelement_powers()[2 * ii + 1]
+                    v = self.dss.cktelement.voltages[2 * ii] + 1j * self.dss.cktelement.voltages[2 * ii + 1]
+                    s = self.dss.cktelement.powers[2 * ii] + 1j * self.dss.cktelement.powers[2 * ii + 1]
                     # complex current in amps (bus1 --> bus2)
                     if abs(v)<0.00001:
                         v=0.00001
@@ -517,14 +521,16 @@ class OpenDSSInterface(SimulationInterfacesABC):
     Set dss circuit substation bus voltage
     '''
     def set_source_voltage(self, v_pu: float) -> None:
-        self.dss.vsources_write_pu(v_pu)
+        self.dss.vsources.pu=v_pu
 
     '''
     Initialize "vrStates" based on dss file
     '''
     def __init_vr(self,t_s):
         # self.vrStates = []
-        VR_names = list(self.dss.regcontrols_all_names())
+        VR_names = list(self.dss.regcontrols.names)
+        if VR_names[0] == 'NONE':
+            VR_names = []
         # RegulatorByPhase type
         for vr_name in VR_names:
             vr=dict()

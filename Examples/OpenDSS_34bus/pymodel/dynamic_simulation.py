@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt    
 import pathlib
 import os
-from opender_interface.opender_interface import OpenDERInterface
+from opender_interface.der_interface import DERInterface
 from opender_interface.opendss_interface import OpenDSSInterface
 from opender_interface.time_plots import TimePlots
 from opender import DERCommonFileFormat
@@ -27,9 +27,9 @@ load_profile = pd.read_excel(load_file, index_col=0)
 # simulation time step
 tstep = 1
 
-#Create OpenDERInterfae
+#Create DERInterfae
 ckt = OpenDSSInterface(str(dss_file))
-ckt_int = OpenDERInterface(ckt,t_s=tstep)
+ckt_int = DERInterface(ckt, t_s=tstep)
 
 #initialize circuit
 ckt_int.initialize()

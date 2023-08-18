@@ -3,7 +3,7 @@ import os
 import pathlib
 import matplotlib.pyplot as plt
 from opender_interface.opendss_interface import OpenDSSInterface
-from opender_interface.opender_interface import OpenDERInterface
+from opender_interface.der_interface import DERInterface
 from opender import DER, DERCommonFileFormat
 from opender_interface.time_plots import TimePlots
 from opender_interface.xy_plot import XYPlots
@@ -19,14 +19,14 @@ dss_file = circuit_folder.joinpath("single_isource_gfov.dss")
 # load_file = script_path.joinpath("load_profile.xlsx")
 
 # configure the dynamic simulation
-delt = 0.001  # sampling time step (s)
+delt = 0.01  # sampling time step (s)
 
 
 # %%
 # initialize circuit
 
 ckt = OpenDSSInterface(str(dss_file))
-ckt_int = OpenDERInterface(ckt,t_s=delt)
+ckt_int = DERInterface(ckt, t_s=delt)
 
 ckt_int.initialize(DER_sim_type='isource')
 
@@ -65,16 +65,14 @@ while tsim < tend:
     if tsim >= tevt2:
         ckt_int.ckt.cmd('open line.line1')
 
-    ckt_int.run()
 
-    ckt_int.update_der_output_powers()
-    ckt_int.solve_power_flow()
+    ckt_int.der_convergence_process()
 
     # ckt_int.solve_power_flow()
     ckt_int.read_sys_voltage()
     ckt_int.read_line_flow()
 
-    print(tsim, ckt_int.ckt.dss.bus_pu_voltages(), (ckt_int.ckt.lines[['flowS_A', 'flowS_B', 'flowS_C']])) #,'flowS_A', 'flowS_B', 'flowS_C'
+    print(tsim, ckt_int.ckt.dss.bus.pu_voltages, (ckt_int.ckt.lines[['flowS_A', 'flowS_B', 'flowS_C']])) #,'flowS_A', 'flowS_B', 'flowS_C'
     # log result
     plot_obj.add_to_traces(
         {

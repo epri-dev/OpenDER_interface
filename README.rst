@@ -59,3 +59,8 @@ Examples
 
 
 **Users are encouraged and expected to make changes to the released package for their usage.**
+
+
+Unittests
+Docstring readthedoc
+toolinterface

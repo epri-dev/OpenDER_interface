@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pathlib
 import os
 from opender_interface.opendss_interface import OpenDSSInterface
-from opender_interface.opender_interface import OpenDERInterface
+from opender_interface.der_interface import DERInterface
 from opender import DERCommonFileFormat
 
 '''
@@ -54,7 +54,7 @@ topology = [
 
 # create OpenDER interface
 ckt = OpenDSSInterface(str(dss_file))
-ckt_int = OpenDERInterface(ckt)
+ckt_int = DERInterface(ckt)
 
 # initialize circuit
 ckt_int.initialize(DER_sim_type='PVSystem')

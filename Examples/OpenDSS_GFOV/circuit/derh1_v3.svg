@@ -6,11 +6,11 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2023-08-09T16:39:15.619938</dc:date>
+    <dc:date>2023-08-18T14:53:35.719725</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
-      <dc:title>Matplotlib v3.7.1, https://matplotlib.org/</dc:title>
+      <dc:title>Matplotlib v3.7.2, https://matplotlib.org/</dc:title>
      </cc:Agent>
     </dc:creator>
    </cc:Work>
@@ -60,35 +60,16 @@ L 414.72 41.472
 " style="fill: none; stroke: #cccccc; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
    </g>
    <g id="patch_7">
-    <path d="M 237.469877 168.586732 
-Q 241.912464 173.613005 246.355051 178.639278 
-Q 239.668481 179.177583 232.98191 179.715889 
+    <path d="M 235.342235 176.353174 
+Q 216.954611 168.114641 198.566988 159.876108 
+L 196.931458 163.526456 
+Q 192.683327 158.335733 188.435196 153.14501 
+Q 195.136622 152.860211 201.838048 152.575412 
+L 200.202518 156.22576 
+Q 218.590142 164.464293 236.977765 172.702826 
+L 235.342235 176.353174 
 z
 " style="fill: #a52a2a; stroke: #a52a2a; stroke-linecap: round"/>
-   </g>
-   <g id="patch_8">
-    <path d="M 234.218944 175.009975 
-Q 224.580684 136.193827 214.942425 97.37768 
-L 211.060312 98.34163 
-Q 212.525803 91.794815 213.991294 85.248 
-Q 218.348972 90.34889 222.706651 95.449781 
-L 218.824538 96.41373 
-Q 228.462797 135.229878 238.101056 174.046025 
-L 234.218944 175.009975 
-z
-" style="fill: #ffa500; stroke: #ffa500; stroke-linecap: round"/>
-   </g>
-   <g id="patch_9">
-    <path d="M 234.788161 173.072645 
-Q 267.921713 141.840462 301.055265 110.608278 
-L 298.311587 107.697569 
-Q 304.735197 105.765283 311.158807 103.832998 
-Q 308.850714 110.131347 306.542622 116.429697 
-L 303.798943 113.518987 
-Q 270.665391 144.751171 237.531839 175.983355 
-L 234.788161 173.072645 
-z
-" style="fill: #ffd700; stroke: #ffd700; stroke-linecap: round"/>
    </g>
   </g>
  </g>

@@ -135,7 +135,7 @@ class TimePlots:
             self.axes[i].legend()
 
         self.axes[-1].set_xlabel('Time (s)')
-        plt.tight_layout()
+        # plt.tight_layout()
         self.ani = FuncAnimation(self.fig, self.animate, interval=100, blit=True,save_count=int(len(self.traces[0])*1.1))
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import pathlib
-from opender_interface.opender_interface import OpenDERInterface
+from opender_interface.der_interface import DERInterface
 from opender import DER, DERCommonFileFormat, DERCommonFileFormatBESS
 from opender_interface.time_plots import TimePlots
 from opender_interface.opendss_interface import OpenDSSInterface
@@ -21,9 +21,9 @@ delt = 60 * 15  # sampling time step (s)
 
 
 # %%
-# create OpenDERInterface
-ckt = OpenDSSInterface(str(dss_file))
-ckt_int = OpenDERInterface(ckt,t_s=delt)
+# create DERInterface
+ckt = OpenDSSInterface(str(dss_file)) #TODO move it to DERInterface
+ckt_int = DERInterface(ckt, t_s=delt)
 
 # create DER object PV and BESS
 derfiles = {
@@ -100,7 +100,7 @@ for p in PV_profile:
 
     ckt_int.read_line_flow()
 
-    ckt_int.ckt.dss.circuit_set_active_element('line.line2')
+    ckt_int.ckt.dss.circuit.set_active_element('line.line2')
 
     plot_obj.add_to_traces(
         {

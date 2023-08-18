@@ -14,44 +14,7 @@ import time
 Set plot style
 '''
 script_path = pathlib.Path(os.path.dirname(__file__))
-plt.style.use(str(script_path)+'/mystyle.mplstyle')
-
-
-# region This parameter is configured for animation. If you intend to utilize this function, please uncomment this command line and set the appropriate path accordingly.
-# matplotlib.rcParams['animation.ffmpeg_path'] = r'C:\Users\pyma001\Box\_Documents\ffmpeg.exe'
-# endregion
-
-
-# mpl_dict = {'figure.facecolor': 'white',
-#  'axes.labelcolor': '.15',
-#  'xtick.direction': 'out',
-#  'ytick.direction': 'out',
-#  'xtick.color': '.15',
-#  'ytick.color': '.15',
-#  'axes.axisbelow': True,
-#  'grid.linestyle': '--',
-#  'text.color': '.15',
-#  'font.family': ['sans-serif'],
-#  'font.sans-serif': ['Arial', 'DejaVu Sans', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif'],
-#  'lines.solid_capstyle': 'round',
-#  'patch.edgecolor': 'w',
-#  'patch.force_edgecolor': True,
-#  # 'image.cmap': 'rocket',
-#  'xtick.top': False,
-#  'ytick.right': False,
-#  'axes.grid': True,
-#  'axes.facecolor': 'white',
-#  'axes.edgecolor': '.8',
-#  'grid.color': '.8',
-#  'axes.spines.left': True,
-#  'axes.spines.bottom': True,
-#  'axes.spines.right': True,
-#  'axes.spines.top': True,
-#  'xtick.bottom': False,
-#  'ytick.left': False}
-
-# for key, value in mpl_dict.items():
-#     matplotlib.rcParams[key] = value
+plt.style.use(str(script_path)+'/xyplot.mplstyle')
 
 '''
 This is the plot class utilized for creating steady state figures depicting DER operation information, including 

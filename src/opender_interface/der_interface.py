@@ -4,8 +4,7 @@ from copy import deepcopy
 from opender_interface.voltage_regulator import VR_Model
 
 
-class OpenDERInterface:
-
+class DERInterface:
     '''
     This is the interface bridging OpenDER and multiple power system simulators, as well as the interface connecting voltage
     regulators (VR: class of VR_Model).
@@ -19,7 +18,7 @@ class OpenDERInterface:
     P_TOLERANCE = 0.01
 
     '''
-    Create an "OpenDERInterface" object, assigning the provided simulator interface object to the "ckt" attribute. 
+    Create an "DERInterface" object, assigning the provided simulator interface object to the "ckt" attribute. 
     The attribute "der_objs" refer to DER objects, which are instances of the "OpenDER" class; "vr_objs" represent
     voltage regulator (VR) objects and are of the "VR_Model" type.
     Input parameters:
@@ -27,6 +26,7 @@ class OpenDERInterface:
         t_s: simulation time step, used for initialize "OpenDER" objects.
     '''
     def __init__(self, simulator_ckt, t_s=DER.t_s):
+
         self.ckt = simulator_ckt
 
         self.der_objs = []

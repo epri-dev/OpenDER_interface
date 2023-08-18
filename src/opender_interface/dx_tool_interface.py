@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 This abstract class serves as an interface for interacting with various power system simulators. 
 '''
 
-class SimulationInterfacesABC(ABC):
+class DxToolInterfacesABC(ABC):
 
     # ******************************************************************************************************************
     # class member
