@@ -59,19 +59,23 @@ class OpenDSSInterface(DxToolInterfacesABC):
 
 
 
-    def initialize(self, t_s, DER_sim_type = 'PVSystem'):
+    def initialize(self, DER_sim_type = 'PVSystem',**kwargs):
         '''
         Initialize "OpenDSSInterface" object based on given dss file, including the attributes of "buses", "lines", "loads",
         "generators", as well as "DERs" and "vrStates".
         Input parameters:
-            t_s: simulation time step, used for initialize "vrStates"
-            DER_sim_type: DER type, used for initialize "DERs". The default type is "PVSystem".
+
+        :param DER_sim_type: DER type, used for initialize "DERs". The default type is "PVSystem".
         '''
+
+        if not DER_sim_type.lower() in ['pvsystem', 'generator', 'isource', 'vsource']:
+            raise ValueError(f"DER_sim_type should be 'pvsystem', 'generator', 'isource', 'vsource'. Now it is {DER_sim_type}")
+
         self.__init_buses()
         self.__init_lines()
         self.__init_loads()
         self.__init_generators()
-        self.__init_vr(t_s)
+        self.__init_vr()
         self.DER_sim_type = DER_sim_type
 
         if DER_sim_type == 'PVSystem':
@@ -509,6 +513,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
                 if ('_'+phase.lower() in linename) or ('_'+phase in linename) or (not(('_a' in linename)or('_b' in linename)or('_c' in linename))):
                     v = self.dss.cktelement.voltages[2 * ii] + 1j * self.dss.cktelement.voltages[2 * ii + 1]
                     s = self.dss.cktelement.powers[2 * ii] + 1j * self.dss.cktelement.powers[2 * ii + 1]
+
                     # complex current in amps (bus1 --> bus2)
                     if abs(v)<0.00001:
                         v=0.00001
@@ -526,7 +531,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
     '''
     Initialize "vrStates" based on dss file
     '''
-    def __init_vr(self,t_s):
+    def __init_vr(self):
         # self.vrStates = []
         VR_names = list(self.dss.regcontrols.names)
         if VR_names[0] == 'NONE':
@@ -535,7 +540,6 @@ class OpenDSSInterface(DxToolInterfacesABC):
         for vr_name in VR_names:
             vr=dict()
             vr['Ts'] = 100000
-            # vr['Ts'] = t_s
             # retrieve vr information from DSS circuit
             vr['Xfmr'] = self.cmd('? regcontrol.{}.transformer'.format(vr_name))
             vr['winding'] = int(self.cmd('? regcontrol.{}.winding'.format(vr_name)))

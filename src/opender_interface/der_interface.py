@@ -2,32 +2,39 @@ from opender import DER, DER_PV, DER_BESS, DERCommonFileFormat, DERCommonFileFor
 from typing import Union, Tuple, List, Dict
 from copy import deepcopy
 from opender_interface.voltage_regulator import VR_Model
+from opender_interface.dx_tool_interface import DxToolInterfacesABC
+from opender_interface.opendss_interface import OpenDSSInterface
+import os
 
 
 class DERInterface:
     '''
-    This is the interface bridging OpenDER and multiple power system simulators, as well as the interface connecting voltage
-    regulators (VR: class of VR_Model).
+    This is the interface bridging OpenDER and distribution simulation tools for circuit level simulation.
+    It passes voltage information from distribution simulation tool to the OpenDER, and
+    sends the OpenDER output powers back to the simulation tool. It also manages the convergence process.
     '''
 
-    '''
-    Converge criteria of V,P,Q
-    '''
+    # Converge criteria of V,P,Q
     V_TOLERANCE = 0.000001
     Q_TOLERANCE = 0.00001
     P_TOLERANCE = 0.01
 
-    '''
-    Create an "DERInterface" object, assigning the provided simulator interface object to the "ckt" attribute. 
-    The attribute "der_objs" refer to DER objects, which are instances of the "OpenDER" class; "vr_objs" represent
-    voltage regulator (VR) objects and are of the "VR_Model" type.
-    Input parameters:
-        simulator_ckt: provided simulator interface object, in current version, it is an instance of the "OpenDSSInterface" class.
-        t_s: simulation time step, used for initialize "OpenDER" objects.
-    '''
     def __init__(self, simulator_ckt, t_s=DER.t_s):
+        '''
+        Create the "DERInterface" object, assigning the provided simulator interface object to the "ckt" attribute.
 
-        self.ckt = simulator_ckt
+        Input parameters:
+
+        :param simulator_ckt: simulation tool interface object or simulation circuit file
+        :param t_s: simulation time step
+        '''
+
+        if isinstance(simulator_ckt, DxToolInterfacesABC):
+            self.ckt: DxToolInterfacesABC = simulator_ckt
+        elif os.path.isfile(simulator_ckt):
+            self.ckt: OpenDSSInterface = OpenDSSInterface(simulator_ckt)
+        else:
+            raise ValueError(f'Circuit simulation file path incorrect: {simulator_ckt}')
 
         self.der_objs = []
         self.t_s = t_s
@@ -36,29 +43,36 @@ class DERInterface:
 
         self.__der_objs_temp = []
 
+        # P and Q steps for each convergence iteration
         self.__delta_q = 0.5
         self.__delta_p = 0.5
 
-    '''
-    Compile command from users in circuit simulators
-    '''
-    def cmd(self,command):
+    def cmd(self,command:str) -> None:
+        '''
+        Execute commands for OpenDSS
+
+        :param command: OpenDSS COM command in string
+        '''
         self.ckt.cmd(command)
 
-    '''
-    Initialize the "ckt" attribute, which corresponds to the simulator interface object, utilizing the provided configuration file.
-    '''
-    def initialize(self, DER_sim_type='PVSystem'):
-        self.ckt.initialize(self.t_s,DER_sim_type)
+    def initialize(self, **kwargs):
+        '''
+        Initialize the "ckt" attribute, which corresponds to the simulator interface object, utilizing the provided configuration file.
+        '''
 
-    '''
-    Create OpenDER object based on given DER nameplate information and assign the updated object to the "der_objs" attribute
-    Input parameters:
-        der_files: type of "DERCommonFileFormat" or its inheritance classes, containing DER nameplate information, refer to 
-            OpenDER for more information.
-        p_pu: DER available power, indicating the upper limit of the DER output power, default value is 0
-    '''
+        self.ckt.initialize(**kwargs)
+
+
+
+
     def create_opender_objs(self, der_files, p_pu=0):
+        '''
+        Create OpenDER object based on given DER nameplate information and assign the updated object to the "der_objs" attribute
+        Input parameters:
+            der_files: type of "DERCommonFileFormat" or its inheritance classes, containing DER nameplate information, refer to
+                OpenDER for more information.
+            p_pu: DER available power, indicating the upper limit of the DER output power, default value is 0
+        '''
 
         if isinstance(der_files, DERCommonFileFormat) or isinstance(der_files, DERCommonFileFormatBESS):
             der_files= {der_obj[1]['name']: der_files for der_obj in self.ckt.DERs.iterrows()}

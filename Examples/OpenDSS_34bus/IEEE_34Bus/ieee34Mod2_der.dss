@@ -187,10 +187,10 @@ Load.d844_846b.vminpu=0.85 daily=default
 Load.d844_846c.vminpu=0.85 daily=default
 Load.d846_848b.vminpu=0.85 daily=default
 
-New PVSystem.PV_1(890) Bus1=890.1.2.3 Phases=3, kV=24.9 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9
-New PVSystem.PV_2(890) Bus1=890.1.2.3 Phases=3, kV=24.9 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9
-New PVSystem.PV_3(890) Bus1=890.1.2.3 Phases=3, kV=24.9 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9
-New PVSystem.PV_4(890) Bus1=890.1.2.3 Phases=3, kV=24.9 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9
+New PVSystem.PV_1(890) Bus1=890.1.2.3 Phases=3, kV=4.16 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9
+New PVSystem.PV_2(890) Bus1=890.1.2.3 Phases=3, kV=4.16 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9
+New PVSystem.PV_3(890) Bus1=890.1.2.3 Phases=3, kV=4.16 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9
+New PVSystem.PV_4(890) Bus1=890.1.2.3 Phases=3, kV=4.16 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9
 New PVSystem.PV_1(854) Bus1=854.1.2.3 Phases=3, kV=24.9 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9
 New PVSystem.PV_2(854) Bus1=854.1.2.3 Phases=3, kV=24.9 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9
 New PVSystem.PV_3(854) Bus1=854.1.2.3 Phases=3, kV=24.9 Pmpp=400 kVA=400 irradiance=1 kvarMax=176.0 kvarMaxAbs=-176.0 PFpriority=Yes pf=-0.9

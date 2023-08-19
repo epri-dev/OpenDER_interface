@@ -16,42 +16,6 @@ dss_file = circuit_folder.joinpath("ieee34Mod2_der.dss")
 load_file = script_path.joinpath("load_profile.xlsx")
 
 
-# TODO convert this to interface to generate topology automatically
-# line voltages to present in the figure
-topology = [
-    [802, 806],
-    [806, 808],
-    [808, 810],
-    [808, 812],
-    [812, 814],
-    [814, 850],
-    [850, 816],
-    [816, 818],
-    [818, 820],
-    [820, 822],
-    [816, 824],
-    [824, 826],
-    [824, 828],
-    [828, 830],
-    [830, 854],
-    [854, 856],
-    [854, 852],
-    [852, 832],
-    [832, 888],
-    [888, 890],
-    [832, 858],
-    [858, 864],
-    [858, 834],
-    [834, 842],
-    [842, 844],
-    [844, 846],
-    [846, 848],
-    [860, 836],
-    [836, 840],
-    [836, 862],
-    [862, 838]
-]
-
 # create OpenDER interface
 ckt = OpenDSSInterface(str(dss_file))
 ckt_int = DERInterface(ckt)
@@ -59,15 +23,55 @@ ckt_int = DERInterface(ckt)
 # initialize circuit
 ckt_int.initialize(DER_sim_type='PVSystem')
 
+
 # This plot illustrates the variation of bus voltages along power lines
 def plot_voltage_profile(ax, data_label, data_color):
-    for line in topology:
-        ax.plot([ckt_int.ckt.buses['distance'].loc[str(line[0])],
-                 ckt_int.ckt.buses['distance'].loc[str(line[1])]],
-                [ckt_int.ckt.buses[data_label].loc[str(line[0])],
-                 ckt_int.ckt.buses[data_label].loc[str(line[1])]], color=data_color)
 
+    # Lines
+    for _, line in ckt_int.ckt.lines.iterrows():
+        ax.plot([ckt_int.ckt.buses['distance'].loc[str(line['bus1'])],
+                 ckt_int.ckt.buses['distance'].loc[str(line['bus2'])]],
+                [ckt_int.ckt.buses[data_label].loc[str(line['bus1'])],
+                 ckt_int.ckt.buses[data_label].loc[str(line['bus2'])]], color=data_color)
+
+    # Transformers
+    ax.plot([ckt_int.ckt.buses['distance'].loc['814'],
+             ckt_int.ckt.buses['distance'].loc['814r']],
+            [ckt_int.ckt.buses[data_label].loc['814'],
+             ckt_int.ckt.buses[data_label].loc['814r']], color=data_color)
+    ax.plot([ckt_int.ckt.buses['distance'].loc['852'],
+             ckt_int.ckt.buses['distance'].loc['852r']],
+            [ckt_int.ckt.buses[data_label].loc['852'],
+             ckt_int.ckt.buses[data_label].loc['852r']], color=data_color)
+    ax.plot([ckt_int.ckt.buses['distance'].loc['832'],
+             ckt_int.ckt.buses['distance'].loc['888']],
+            [ckt_int.ckt.buses[data_label].loc['832'],
+             ckt_int.ckt.buses[data_label].loc['888']], color=data_color)
+
+    # Bus voltages
     ax.scatter(ckt_int.ckt.buses['distance'], ckt_int.ckt.buses[data_label], label=data_label, color=data_color)
+
+
+def plot_power_profile(ax, data_label, data_color):
+    # # Lines
+    i=0
+    for index, line in ckt_int.ckt.lines.iterrows():
+
+        if abs(line.loc[data_label].real)>0.1:
+            ax.scatter((ckt_int.ckt.buses['distance'].loc[str(line['bus1'])]+ckt_int.ckt.buses['distance'].loc[str(line['bus2'])])/2,
+                       line.loc[data_label].real, color=data_color)
+
+            for j in range(i,len(ckt_int.ckt.lines)):
+                line2 = ckt_int.ckt.lines.iloc[j]
+                if abs(line2.loc[data_label].real) > 0.1:
+                    if line['bus1'] == line2['bus2'] or line['bus2'] == line2['bus1'] or\
+                       (i==7 and j==8) or (i==39 and j==40) or (i==39 and j==50):
+                        ax.plot([(ckt_int.ckt.buses['distance'].loc[str(line['bus1'])] + ckt_int.ckt.buses['distance'].loc[str(line['bus2'])]) / 2,
+                                 (ckt_int.ckt.buses['distance'].loc[str(line2['bus1'])] + ckt_int.ckt.buses['distance'].loc[str(line2['bus2'])]) / 2],
+                                [line.loc[data_label].real, line2.loc[data_label].real],color=data_color)
+        i=i+1
+
+
 
 # set PV system output power
 scale = 1
@@ -79,9 +83,10 @@ for i, PV in ckt_int.ckt.DERs.iterrows():
 ckt_int.enable_control()
 ckt_int.solve_power_flow()
 ckt_int.read_sys_voltage()
+ckt_int.read_line_flow()
 
-fig, ax = plt.subplots(2, 1,figsize=(10,5))
-
+fig, ax = plt.subplots(2, 2,figsize=(10,5),sharex=True)
+ax = [ax[0][0], ax[0][1], ax[1][0], ax[1][1]]
 plot_voltage_profile(ax[0],'Vpu_A','blue')
 plot_voltage_profile(ax[0],'Vpu_B','orange')
 plot_voltage_profile(ax[0],'Vpu_C','green')
@@ -91,7 +96,25 @@ ax[0].set_ylabel('Voltage (pu)')
 ax[0].set_ylim(0.9, 1.09)
 ax[0].grid(visible=True)
 ax[0].legend(loc=2)
-ax[0].set_title('OpenDSS')
+ax[0].set_title('P=1')
+
+
+plot_power_profile(ax[2],'flowS_A','blue')
+plot_power_profile(ax[2],'flowS_B','orange')
+plot_power_profile(ax[2],'flowS_C','green')
+
+ax[2].set_xlabel('Distance (miles)')
+ax[2].set_ylabel('Power (kW)')
+# ax[2].set_ylim(0.9, 1.09)
+ax[2].grid(visible=True)
+ax[2].legend(loc=2)
+ax[2].set_title('P=1')
+# import pandas
+#
+# pandas.set_option('display.max_columns', None)
+# pandas.set_option('display.width', 9999)
+# print(ckt_int.ckt.lines)
+# print(ckt_int.ckt.buses)
 
 #%%
 # connect a DER to each bus
@@ -102,11 +125,12 @@ der_file = DERCommonFileFormat(NP_VA_MAX=400000,
                                CONST_PF_MODE_ENABLE=True,
                                CONST_PF=0.9,
                                CONST_PF_EXCITATION='ABS')
-der_list = ckt_int.create_opender_objs(der_file, p_pu=scale)
-
+der_list = ckt_int.create_opender_objs(der_file, p_pu=0)
 
 # run a load flow and check the feeder total power
 ckt_int.der_convergence_process()
+ckt_int.read_sys_voltage()
+ckt_int.read_line_flow()
 
 plot_voltage_profile(ax[1],'Vpu_A','blue')
 plot_voltage_profile(ax[1],'Vpu_B','orange')
@@ -117,7 +141,18 @@ ax[1].set_ylabel('Voltage (pu)')
 ax[1].set_ylim(0.9, 1.09)
 ax[1].grid(visible=True)
 ax[1].legend(loc=2)
-ax[1].set_title('OpenDSS + OpenDER')
+ax[1].set_title('P=0')
+
+plot_power_profile(ax[3],'flowS_A','blue')
+plot_power_profile(ax[3],'flowS_B','orange')
+plot_power_profile(ax[3],'flowS_C','green')
+
+ax[3].set_xlabel('Distance (miles)')
+ax[3].set_ylabel('Power (kW)')
+# ax[2].set_ylim(0.9, 1.09)
+ax[3].grid(visible=True)
+ax[3].legend(loc=2)
+ax[3].set_title('P=0')
 
 fig.tight_layout()
 fig.savefig(f'node_voltage.svg')

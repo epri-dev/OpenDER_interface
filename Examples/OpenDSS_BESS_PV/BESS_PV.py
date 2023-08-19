@@ -22,8 +22,7 @@ delt = 60 * 15  # sampling time step (s)
 
 # %%
 # create DERInterface
-ckt = OpenDSSInterface(str(dss_file)) #TODO move it to DERInterface
-ckt_int = DERInterface(ckt, t_s=delt)
+ckt_int = DERInterface(dss_file, t_s=delt)
 
 # create DER object PV and BESS
 derfiles = {
