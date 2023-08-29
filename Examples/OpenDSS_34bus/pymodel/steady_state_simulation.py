@@ -120,8 +120,8 @@ ax[2].set_title('P=1')
 # connect a DER to each bus
 der_file = DERCommonFileFormat(NP_VA_MAX=400000,
                                NP_P_MAX=400000,
-                               NP_Q_MAX_INJ=176000,
-                               NP_Q_MAX_ABS=176000,
+                               NP_Q_MAX_INJ=400000,
+                               NP_Q_MAX_ABS=400000,
                                CONST_PF_MODE_ENABLE=True,
                                CONST_PF=0.9,
                                CONST_PF_EXCITATION='ABS')

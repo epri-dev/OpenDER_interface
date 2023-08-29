@@ -1,3 +1,4 @@
+import pandas as pd
 from opender import DER, DER_PV, DER_BESS, DERCommonFileFormat, DERCommonFileFormatBESS
 from typing import Union, Tuple, List, Dict
 from copy import deepcopy
@@ -8,11 +9,9 @@ import os
 
 
 class DERInterface:
-    '''
+    """
     This is the interface bridging OpenDER and distribution simulation tools for circuit level simulation.
-    It passes voltage information from distribution simulation tool to the OpenDER, and
-    sends the OpenDER output powers back to the simulation tool. It also manages the convergence process.
-    '''
+    """
 
     # Converge criteria of V,P,Q
     V_TOLERANCE = 0.000001
@@ -20,14 +19,14 @@ class DERInterface:
     P_TOLERANCE = 0.01
 
     def __init__(self, simulator_ckt, t_s=DER.t_s):
-        '''
+        """
         Create the "DERInterface" object, assigning the provided simulator interface object to the "ckt" attribute.
 
         Input parameters:
 
         :param simulator_ckt: simulation tool interface object or simulation circuit file
         :param t_s: simulation time step
-        '''
+        """
 
         if isinstance(simulator_ckt, DxToolInterfacesABC):
             self.ckt: DxToolInterfacesABC = simulator_ckt
@@ -46,38 +45,68 @@ class DERInterface:
         # P and Q steps for each convergence iteration
         self.__delta_q = 0.5
         self.__delta_p = 0.5
+        self.__numberofders = 0
+        self.__der_files = []
+        self.__der_bus = []
 
-    def cmd(self,command:str) -> None:
-        '''
-        Execute commands for OpenDSS
+        self.__converged = False
+        self.__v_converged = []
+        self.__q_converged = []
+        self.__p_converged = []
+
+        self.__p_out = []
+        self.__q_out = []
+
+        self.__p_inv = []
+        self.__q_inv = []
+
+        self.__p_previous = []
+        self.__q_previous = []
+
+        self.__current_v = []
+        self.__previous_v = []
+
+        self.__p_check = []
+        self.__q_check = []
+
+    def cmd(self, command:str) -> None:
+        """
+        Execute commands
 
         :param command: OpenDSS COM command in string
-        '''
+        """
         self.ckt.cmd(command)
 
     def initialize(self, **kwargs):
-        '''
-        Initialize the "ckt" attribute, which corresponds to the simulator interface object, utilizing the provided configuration file.
-        '''
+        """
+        Initialize and obtain circuit information. For OpenDSS simulation, please use the variable of DER_sim_type
+        to provide the type of PC element which represents DERs (generator, PVSystem, isource, or vsource)
+
+        :param DER_sim_type: Circuit element which represents DERs
+        """
 
         self.ckt.initialize(**kwargs)
 
+    def create_opender_objs(self, der_files: Union[Dict[str, DERCommonFileFormat], DERCommonFileFormat], p_pu=0) -> List[DER]:
+        """
+        Create OpenDER object on the circuit based on the DER configuration files provided. If a single
+        DERCommonFileFormat object is provided, it is assumed all DERs on the circuit have the same ratings and control
+        settings. If a dictionary is provided, please use the format of {'DER_name':DERCommonFileFormat}. DER_name
+        should match the ones in the circuit definition. The created OpenDER objects will be returned as a list.
 
-
-
-    def create_opender_objs(self, der_files, p_pu=0):
-        '''
-        Create OpenDER object based on given DER nameplate information and assign the updated object to the "der_objs" attribute
         Input parameters:
-            der_files: type of "DERCommonFileFormat" or its inheritance classes, containing DER nameplate information, refer to
-                OpenDER for more information.
-            p_pu: DER available power, indicating the upper limit of the DER output power, default value is 0
-        '''
 
+        :param der_files: Either a single DERCommonFileFormat object or a dictionary of them, containing the OpenDER
+                          ratings and control settings.
+        :param p_pu: initializing DER available power for PV or demanded active power for BESS. Default value is 0
+        """
+
+        # If received a single configuration file, convert to a dictionary
         if isinstance(der_files, DERCommonFileFormat) or isinstance(der_files, DERCommonFileFormatBESS):
             der_files= {der_obj[1]['name']: der_files for der_obj in self.ckt.DERs.iterrows()}
 
         for (index, der_i), setting in zip(self.ckt.DERs.iterrows(), der_files):
+            created = False
             for name, der_file in der_files.items():
                 if name.upper() == der_i['name'].upper():
                     if 'PV' in der_i['name'].upper():
@@ -101,8 +130,9 @@ class DERInterface:
                         der_obj.update_der_input(p_dc_pu=p_pu, f=60)
 
                     self.der_objs.append(der_obj)
-
-
+                    created = True
+            if not created:
+                raise ValueError(f'DER named {der_i["name"]} does not have a configuration file specified')
 
         self.__numberofders = len(self.der_objs)
 
@@ -129,148 +159,173 @@ class DERInterface:
         self.__p_check = [False for der_obj in self.der_objs]
         self.__q_check = [False for der_obj in self.der_objs]
 
-        # self.__cl_iteration = None
-
         return self.der_objs
 
-    '''
-    Update DER output into circuit, refer to simulator interface for details. 
-    '''
-    def update_der_output_powers(self, der_list=None, p_list=None, q_list=None):
+    def update_der_output_powers(self, der_list: List = None, p_list: List = None, q_list: List = None) -> None:
+        """
+        Update DER output information in terms of active and reactive power into the circuit simulation solver.
+        p_list and q_list are used to specify P and Q values other than what are calculated in the OpenDER objects.
+        Currently, this does not support DER as current source or voltage source behind impedance.
 
+        :param der_list: Default is to update all DERs. If specified, only update part of the OpenDER objects.
+        :param p_list: List of DER active power output in kW
+        :param q_list: List of DER active power output in kvar
+        """
         if der_list is None:
             der_list = self.der_objs
 
-        self.ckt.update_der_output_powers(der_list,p_list,q_list)
+        self.ckt.update_der_output_powers(der_list, p_list, q_list)
 
-    '''
-    Set circuit substation bus voltage
-    '''
-    def set_source_voltage(self, v_pu: float):
+    def set_source_voltage(self, v_pu: float) -> None:
+        """
+        Set circuit substation bus voltage
+
+        :param v_pu: Substation bus voltage in pu
+        """
         self.ckt.set_source_voltage(v_pu)
 
-    '''
-    Return bus voltages derived from circuit simulators
-    '''
-    def read_sys_voltage(self):
+    def read_sys_voltage(self) -> pd.DataFrame:
+        """
+        Read and return bus voltages, obtained from circuit simulators
+        :return: bus voltages in DataFrame, indexed by bus names. Also accessed by .ckt.buses
+        """
         return self.ckt.read_sys_voltage()
 
-    '''
-    Return DER bus voltages and phase angles derived from circuit simulators
-    '''
-    def read_der_voltage(self):
-        v_der_list =  self.ckt.read_der_voltage()
+    def read_der_voltage(self) -> Tuple[List, List]:
+        """
+        Return DER bus voltages and phase angles, obtained from circuit simulators. This is mostly used in
+        self.run() method to execute the OpenDER calculation.
+        :return: bus voltage (in pu) and angle (in radian) information for a DER
+        """
+        v_der_list = self.ckt.read_der_voltage()
         theta_der_list = self.ckt.read_der_voltage_angle()
         return v_der_list,theta_der_list
 
-    '''
-    Return line flow and current derived from circuit simulators
-    '''
-    def read_line_flow(self):
+    def read_line_flow(self) -> pd.DataFrame:
+        """
+        Read and return power flow on all lines, obtained from circuit simulators
+        :return: power flow information in DataFrame, indexed by line names. Also accessed by .ckt.lines
+        """
         return self.ckt.read_line_flow()
 
-    '''
-    Solve circuit power flow using simulator engine
-    '''
     def solve_power_flow(self):
+        """
+        Solve circuit power flow using simulator engine
+        """
         self.ckt.solve_power_flow()
 
-    '''
-    Create VR_Model object based on given VR information, and assign the updated object to 'vr_objs' 
-    Input parameters:
-        vr_list: list of VR information, containing name, tap information and so on, see example for details.
-    '''
-    def create_vr_objs(self, vr_list):
-        # self.ckt.create_vr_objs(vr_list)
-        for vr in vr_list:
-            for fdr_vrname in self.ckt.vrStates.keys():
-                if fdr_vrname == vr['name']:
-                    self.vr_objs[fdr_vrname] = VR_Model(
-                        Ts=100000,
-                        # Ts=self.t_s,
-                        Td_ctrl=vr['Td_ctrl'],
-                        Td_tap=vr['Td_tap'],
-                        Vref=self.ckt.vrStates[fdr_vrname]['Vref'],
-                        db=self.ckt.vrStates[fdr_vrname]['db'],
-                        LDC_R=self.ckt.vrStates[fdr_vrname]['LDC_R'],
-                        LDC_X=self.ckt.vrStates[fdr_vrname]['LDC_X'],
-                        PT_Ratio=self.ckt.vrStates[fdr_vrname]['PT_Ratio'],
-                        CT_Primary=self.ckt.vrStates[fdr_vrname]['CT_Primary'],
-                        tap_ini=0,
-                        )
+    def create_vr_objs(self):
+        """
+        Create voltage regulator (VR_Model) object based on their definition in the circuit simulation tool
+        """
+        for fdr_vrname in self.ckt.VRs.keys():
+            self.vr_objs[fdr_vrname] = VR_Model(
+                Ts=100000,
+                # Ts=self.t_s,
+                Td_ctrl=self.ckt.VRs[fdr_vrname]['delay'],
+                Td_tap=self.ckt.VRs[fdr_vrname]['tapdelay'],
+                Vref=self.ckt.VRs[fdr_vrname]['Vref'],
+                db=self.ckt.VRs[fdr_vrname]['db'],
+                LDC_R=self.ckt.VRs[fdr_vrname]['LDC_R'],
+                LDC_X=self.ckt.VRs[fdr_vrname]['LDC_X'],
+                PT_Ratio=self.ckt.VRs[fdr_vrname]['PT_Ratio'],
+                CT_Primary=self.ckt.VRs[fdr_vrname]['CT_Primary'],
+                tap_ini=0,
+                )
 
-    def enable_control(self):
+    def enable_control(self) -> None:
+        """
+        Enable voltage regulator controls in circuit simulation tool solver. This is usually for steady-state analysis
+        or establish the initial condition for a dynamic simulation.
+        """
         self.ckt.enable_control()
 
-    def load_scaling(self, mult):
-        self.ckt.load_scaling(mult)
-
-    '''
-    Read VR tap from circuit, refer to simulator interface for details 
-    '''
-    def read_vr(self):
-        self.ckt.read_vr()
-
-    '''
-    Write VR tap from VR object into circuit, refer to simulator interface for details 
-    '''
-    def write_vr(self):
-        for vrname in self.vr_objs.keys():
-            self.ckt.vrStates[vrname]['UpdatedTap']=self.vr_objs[vrname].tap
-        self.ckt.write_vr()
-
-    '''
-    update VR tap from circuit into VR objects
-    '''
-    def update_vr_tap(self):
-        for vrname in self.vr_objs.keys():
-            self.vr_objs[vrname].tap = float(self.ckt.vrStates[vrname]['tapPos'])
-
-    '''
-    Return VR voltage and current derived from circuit simulator
-    Input parameters:
-        vrname: specify the VR name of which the voltage and current are needed
-    '''
-    def read_vr_v_i(self,vrname):
-        return self.ckt.read_vr_v_i(vrname)
-
-    def disable_control(self):
+    def disable_control(self) -> None:
+        """
+        Disable voltage regulator controls in circuit simulation tool solver. This is usually for dynamic simulation
+        """
         self.ckt.disable_control()
 
-    '''
-    This is the function to invoke OpenDER run() function, utilizing circuit information such as DER bus voltages and etc
-    as input, to compute DER output. Refer to OpenDER for details.
-    Input parameters:
-        der_objs: If provided, this function will exclusively invoke the run() function for the designated DER objects. 
-            In the absence of such specification, all DER objects in "der_objs" will have their run() functions executed.
-    '''
+    def load_scaling(self, mult) -> None:
+        """
+        Scaling all loads in the circuit simulation tool
+
+        :param mult: Multiplication factor
+        """
+        self.ckt.load_scaling(mult)
+
+    def read_vr(self) -> None:
+        """
+        Read VR tap information from circuit.
+        """
+        self.ckt.read_vr()
+
+    def write_vr(self):
+        """
+        Write voltage regulator tap information into circuit simulation, refer to specific simulator interface for details
+        """
+        for vrname in self.vr_objs.keys():
+            self.ckt.VRs[vrname]['UpdatedTap']=self.vr_objs[vrname].tap
+        self.ckt.write_vr()
+
+    def update_vr_tap(self):
+        """
+        update voltage regulator tap position from circuit into VR model objects. Typically used after establishing
+        the initial condition for a dynamic simulation.
+        """
+        for vrname in self.vr_objs.keys():
+            self.vr_objs[vrname].tap = float(self.ckt.VRs[vrname]['tapPos'])
+
+    def read_vr_v_i(self,vrname) -> Tuple[float, float]:
+        """
+        Return VR voltage and current derived from circuit simulator
+
+        :param vrname: specify the VR name of which the voltage and current are needed
+        """
+        return self.ckt.read_vr_v_i(vrname)
+
     def run(self, der_objs=None):
+        """
+        Run OpenDER objects, utilizing circuit information such as DER bus voltages as input, and compute DER output.
+
+        :param der_objs: By default, calculate all DER objects. If provided, this function will exclusively run
+                        for the designated DER
+        """
 
         if der_objs is None:
             der_objs = self.der_objs
 
+        # Read DER terminal voltages
         self.read_sys_voltage()
         v_der_list, theta_der_list = self.read_der_voltage()
         for der, V, theta in zip(der_objs, v_der_list, theta_der_list):
+            # Update the voltages to OpenDER objects, and Compute DER output power
             der.update_der_input(v_pu=V, theta=theta)
             der.run()
             print(der)
 
-
-    '''
-    Auxiliary function used for in-class method 'der_convergence_process'.
-    '''
     def __check_q(self):
+        """
+        Part of convergence process, identify DERs with volt-var or watt-var mode enabled. The reactive power output of
+        these DERs will change a certain percentage between each convergence iteration.
+        """
         for i in range(self.__numberofders):
             if self.__der_files[i].QP_MODE_ENABLE or self.__der_files[i].QV_MODE_ENABLE:
                 self.__q_check[i] = True
 
     def __check_p(self):
+        """
+        Part of convergence process, identify DERs with volt-watt mode enabled. The active power output of
+        these DERs will change a certain percentage between each convergence iteration.
+        """
         for i in range(self.__numberofders):
             if self.__der_files[i].PV_MODE_ENABLE:
                 self.__p_check[i] = True
 
-    def __initialize_time_step(self):
+    def __initialize_convergence(self):
+        """
+        Initialize the convergence process.
+        """
         self.__cl_first_iteration = True
         self.__reset_converged()
 
@@ -279,12 +334,16 @@ class DERInterface:
         self.__check_p()
         self.__check_q()
 
-    def __control_loop_iteration(self):
+    def __convergence_iteration(self):
+        """
+        Iteration for convergence process. Repeat the interation until the active power, reactive power, and terminal
+        voltage of all the DERs in the circuit keep the same values. Convergence is reached at this point.
+        """
         self.__reset_converged()
 
         self.__p_inv = [der_obj.p_out_kw for der_obj in self.__der_objs_temp]
         self.__q_inv = [der_obj.q_out_kvar for der_obj in self.__der_objs_temp]
-        self.__current_v = [der_obj.der_input.v_meas_pu for der_obj in self.__der_objs_temp] #TODO update to threephase?
+        self.__current_v = [der_obj.der_input.v_meas_pu for der_obj in self.__der_objs_temp]
 
         if not self.__cl_first_iteration:
             self.__calculate_p_out()
@@ -303,29 +362,43 @@ class DERInterface:
             self.__q_out = self.__q_inv
 
     def __reset_converged(self):
+        """
+        Reset convergence checkers, when initializing and each convergence iteration
+        """
         self.__converged = False
         self.__v_converged = [False for der_obj in self.der_objs]
         self.__q_converged = [False for der_obj in self.der_objs]
         self.__p_converged = [False for der_obj in self.der_objs]
 
     def __check_v_criteria(self):
+        """
+        Check if the DER terminal voltages keep the same values between convergence iterations.
+        """
         for i in range(self.__numberofders):
             if abs(self.__current_v[i] - self.__previous_v[i]) <= self.__class__.V_TOLERANCE:
                 self.__v_converged[i] = True
 
     def __check_q_criteria(self):
+        """
+        Check if the DER output reactive powers keep the same values between convergence iterations.
+        """
         for i in range(self.__numberofders):
             if abs(self.__q_out[i] - self.__q_inv[i]) <= self.__class__.Q_TOLERANCE:
                 self.__q_converged[i] = True
-            # else:
-                # print(self._q_out[i] - self._q_inv[i])
 
     def __check_p_criteria(self):
+        """
+        Check if the DER output active powers keep the same values between convergence iterations.
+        """
         for i in range(self.__numberofders):
             if abs(self.__p_out[i] - self.__p_inv[i]) <= self.__class__.P_TOLERANCE:
                 self.__p_converged[i] = True
 
     def __check_converged(self):
+        """
+        Check if the DER terminal voltage, reactive and active powers keep the same values between convergence
+        iterations.
+        """
         self.__check_v_criteria()
         self.__check_p_criteria()
         self.__check_q_criteria()
@@ -333,48 +406,45 @@ class DERInterface:
             self.__converged = True
 
     def __calculate_q_out(self):
-        # if self._q_check:
-        #     self._q_out = (self._q_inv - self._q_previous) * self._delta_q + self._q_previous
-        # else:
-        #     self._q_out = self._q_inv
-
+        """
+        For each iteration of convergence process, change only a certain percentage of DER output reactive power.
+        """
         if self.__q_check:
             self.__q_out = [(q_inv - q_previous)*self.__delta_q+q_previous
-                           for q_inv, q_previous in zip(self.__q_inv,self.__q_previous)]
+                            for q_inv, q_previous in zip(self.__q_inv,self.__q_previous)]
         else:
             self.__q_out = self.__q_inv
 
     def __calculate_p_out(self):
-        # if self._p_check:
-        #     self._p_out = (self._p_inv - self._p_previous) * self._delta_p + self._p_previous
-        # else:
-        #     self._p_out = self._p_inv
+        """
+        For each iteration of convergence process, change only a certain percentage of DER output active power.
+        """
         if self.__p_check:
             self.__p_out = [(p_inv - p_previous)*self.__delta_p+p_previous
-                           for p_inv, p_previous in zip(self.__p_inv,self.__p_previous)]
+                            for p_inv, p_previous in zip(self.__p_inv,self.__p_previous)]
         else:
             self.__q_out = self.__q_inv
 
-    '''
-    This is the function for facilitate the convergence process of DER operation. It will iteratively execute DER run() 
-    function of each DER object in "der_obj" until the convergence criteria for P, Q, V are met, or until a maximum of 
-    100 iterations is reached. This function can be regarded as an approximation of deriving the steady-state solution 
-    of the DER for the given circuit.
-    '''
     def der_convergence_process(self):
-        # v_control_i_list = list()
-        # q_control_i_list = list()
+        """
+        Convergence process. This is done by repetitively running power flow solutions and updating OpenDER outputs,
+        until the convergence criteria for P, Q, V are met.
+        """
         i = 0
-        self.__initialize_time_step()
+        self.__initialize_convergence()
 
         while not self.__converged and i < 100:
+            # Copy temporary OpenDER objects so any calculation does not impact their time responses.
             self.__der_objs_temp = deepcopy(self.der_objs)
+
+            # Run the temporary OpenDER objects and update the outputs to circuit simulation
             self.run(self.__der_objs_temp)
-            self.__control_loop_iteration()
+            self.__convergence_iteration()
             self.update_der_output_powers(self.__der_objs_temp, self.__p_out, self.__q_out)
             self.solve_power_flow()
             i = i+1
 
+        # After iteration, the simulation should be converged. Run the actual DER objects and solve power flow.
         self.run()
         self.update_der_output_powers()
         self.solve_power_flow()
@@ -384,13 +454,12 @@ class DERInterface:
         else:
             print('convergence error!')
 
-
-    '''
-    This is the function used for update DER available power
-    Input parameters:
-        p_pu_list: users provided DER upper limit of output power
-    '''
     def update_der_p_pu(self, p_pu_list):
+        """
+        Update active powers in per unit to OpenDER objects
+
+        :param p_pu_list: List of active power (available DC power for PV or active power demand for BESS)  in per unit
+        """
         for der, p_pu in zip(self.der_objs, p_pu_list):
             if isinstance(der, DER_BESS):
                 der.update_der_input(p_dem_pu=p_pu, f=60)

@@ -36,24 +36,17 @@ ckt_int.initialize()
 
 
 # create voltage regulator controls objects to replace the ones in the circuit
-vr_list = [
-    {'name': 'creg1a', 'Td_ctrl': 30, 'Td_tap': 2},
-    {'name': 'creg1b', 'Td_ctrl': 30, 'Td_tap': 2},
-    {'name': 'creg1c', 'Td_ctrl': 30, 'Td_tap': 2},
-    {'name': 'creg2a', 'Td_ctrl': 45, 'Td_tap': 2},
-    {'name': 'creg2b', 'Td_ctrl': 45, 'Td_tap': 2},
-    {'name': 'creg2c', 'Td_ctrl': 45, 'Td_tap': 2},
-    ]
 
-ckt_int.create_vr_objs(vr_list)
+
+ckt_int.create_vr_objs()
 
 # connect a DER to each bus and create DER model interface
 der_file = DERCommonFileFormat(NP_VA_MAX=400000,
                                NP_P_MAX=400000,
                                NP_Q_MAX_INJ=176000,
                                NP_Q_MAX_ABS=176000,
-                               ES_RAMP_RATE=00,
-                               ES_RANDOMIZED_DELAY=300)
+                               ES_RAMP_RATE=300,
+                               ES_RANDOMIZED_DELAY=00)
 der_list = ckt_int.create_opender_objs(p_pu=0.8,der_files=der_file)
 
 
@@ -89,7 +82,6 @@ while t < 1200:
     # simulate der dynamics
     ckt_int.run()
 
-
     # get der injection
     total_gen_kw = 0
 
@@ -104,7 +96,7 @@ while t < 1200:
     ckt_int.solve_power_flow()
 
     # simulate vr control
-    for vrname in ckt_int.ckt.vrStates.keys():
+    for vrname in ckt_int.ckt.VRs.keys():
         Vpri, Ipri = ckt_int.read_vr_v_i(vrname)
         # run the vr control logic
         ckt_int.vr_objs[vrname].run(Vpri = Vpri, Ipri = Ipri)
@@ -125,7 +117,7 @@ while t < 1200:
         # result3[f'debug({der.name})'] = der.enterservice.vft_delay.con_del_enable_out
         # result4[f'{der.name}'] = der.enterservice.vft_delay.con_del_enable_int
 
-    for vrname in ckt_int.ckt.vrStates.keys():
+    for vrname in ckt_int.ckt.VRs.keys():
         # phase = vr['phase']
         result4[f'Tap ({vrname})'] = ckt_int.vr_objs[vrname].tap
         result2[f'V ({vrname})'] = ckt_int.vr_objs[vrname].V

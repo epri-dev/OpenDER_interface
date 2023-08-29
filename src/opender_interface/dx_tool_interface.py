@@ -1,21 +1,17 @@
 from abc import ABC, abstractmethod
 
-'''
-This abstract class serves as an interface for interacting with various power system simulators. 
-'''
 
 class DxToolInterfacesABC(ABC):
+    """
+    This abstract class serves as a template for the application program interface for the distribution analysis tools.
+    """
 
-    # ******************************************************************************************************************
-    # class member
-    # ******************************************************************************************************************
-
-    '''
-    Used for record DER information
-    '''
     @property
     @abstractmethod
     def DERs(self):
+        """
+        OpenDER objects
+        """
         pass
 
     '''
@@ -23,7 +19,7 @@ class DxToolInterfacesABC(ABC):
     '''
     @property
     @abstractmethod
-    def vrStates(self):
+    def VRs(self):
         pass
 
     # ******************************************************************************************************************

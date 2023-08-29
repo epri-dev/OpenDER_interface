@@ -22,7 +22,7 @@ der_obj.der_file.QV_OLRT = 5
 
 ## plot object
 tplot = TimePlots(3,1, ['Voltage [pu]', 'Power output [pu]', 'Reactive power output [pu]'])
-xyplot = XYPlots(der_obj)
+xyplot = XYPlots(der_obj,pu=False)
 
 capture = range(20, 400, 30)
 
