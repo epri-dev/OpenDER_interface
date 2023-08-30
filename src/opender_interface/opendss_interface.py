@@ -46,7 +46,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
         """
         Compile dss command from user
 
-        :param cmd_line: OpenDSS COM command.
+        :param cmd_line: OpenDSS COM command in string or list of strings
         """
 
         if type(cmd_line) is list:

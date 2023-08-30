@@ -3,7 +3,6 @@ OpenDER interface
 =================
 
 
-
 Introduction
 ============
 This is the interfaces designed for `OpenDER <https://github.com/epri-dev/opender/>`__ model, aiming to establish
@@ -13,7 +12,8 @@ Modules
 =======
 This project include the following function modules:
 
-* OpenDER interface with power system simulators
+* OpenDER interface with distribution system simulators. Currently OpenDSS interface is released. The interface to other
+  simulation tool, such as CYME or Synergi is planned.
 * Voltage regulator model (VR_Model) for deriving VR taps
 * Plot function for time series chart
 * Plot function for steady-state charts, including voltage-reactive power, active power-reactive power, frequency-active power, etc
@@ -32,9 +32,6 @@ simulators, with the simulators inheriting from class 'Simulationinterface'.
     :align: center
 
 
-
-
-
 Installation
 ============
 To install dependencies, two options are available:
@@ -43,10 +40,9 @@ To install dependencies, two options are available:
 
     ``pip install -e ./``
 
-2. Manual Installation: Alternatively, you can manually install the dependencies by referring to the 'requirements.txt' file. This file contains a list of the required dependencies along with their specific versions. You can install them individually using standard pip commands
-
-
-If you want have separate project - ***
+2. Manual Installation: Alternatively, you can manually install the dependencies by referring to the 'requirements.txt'
+   file. This file contains a list of the required dependencies along with their specific versions. You can install
+   them individually using standard pip commands
 
 Examples
 =========
@@ -55,12 +51,6 @@ Examples
 * OpenDSS_34bus - steady state simulation: comparison between OpenDSS internal inverter model vs OpenDER
 * OpenDSS_GFOV - single_isource: dynamic simulation of isource experiencing a ground fault over voltage
 * OpenDSS_GFOV - single_vsource: dynamic simulation of vsource experiencing a ground fault over voltage
-* OpenDSS_BESS_PV: 15min time series simulation using BESS for PV power peak shaving
+* OpenDSS_BESS_PV - 15min time series simulation using BESS for PV power peak shaving
 
-
-**Users are encouraged and expected to make changes to the released package for their usage.**
-
-
-Unittests
-Docstring readthedoc
-toolinterface
+**Users are encouraged and expected to make changes to this package for their usage.**

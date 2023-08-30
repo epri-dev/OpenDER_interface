@@ -54,8 +54,7 @@ setup(
         # 'Programming Language :: Python :: 3',
         #'Programming Language :: Python :: 3.5',
         # 'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.11',
         # 'Programming Language :: Python :: Implementation :: CPython',
         # 'Programming Language :: Python :: Implementation :: PyPy',
         # uncomment if you test on these interpreters:
@@ -73,9 +72,9 @@ setup(
         # eg: 'keyword1', 'keyword2', 'keyword3',
     ],
     python_requires='>=3.7',
-    install_requires=["numpy", "opender>=2.0.3", "py-dss-interface", "matplotlib", "pandas", "openpyxl"], #"scipy",
+    install_requires=["numpy", "opender>=2.1", "py-dss-interface>=2.0.0", "matplotlib", "pandas", "openpyxl"], #"scipy",
     extras_require={
-           "dev": ["pytest", "pytest-cov", "sphinx-rtd-theme", "nbsphinx", "black", "pre-commit", "tox", "twine"],
+           "dev": ["pytest", "pytest-cov", "sphinx-rtd-theme", "nbsphinx", "black", "pre-commit", "tox", "twine", "jupyter"],
         # eg:
         #   'rst': ['docutils>=0.11'],
         #   ':python_version=="2.6"': ['argparse'],

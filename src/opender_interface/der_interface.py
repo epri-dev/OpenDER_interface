@@ -18,7 +18,7 @@ class DERInterface:
     Q_TOLERANCE = 0.00001
     P_TOLERANCE = 0.01
 
-    def __init__(self, simulator_ckt, t_s=DER.t_s):
+    def __init__(self, simulator_ckt, t_s=DER.t_s, print_der=True):
         """
         Create the "DERInterface" object, assigning the provided simulator interface object to the "ckt" attribute.
 
@@ -26,6 +26,7 @@ class DERInterface:
 
         :param simulator_ckt: simulation tool interface object or simulation circuit file
         :param t_s: simulation time step
+        :param print_der: If True, print_der OpenDER operation status whenever executed
         """
 
         if isinstance(simulator_ckt, DxToolInterfacesABC):
@@ -69,13 +70,15 @@ class DERInterface:
         self.__p_check = []
         self.__q_check = []
 
-    def cmd(self, command:str) -> None:
+        self.print_der = print_der
+
+    def cmd(self, cmd_line: Union[str, List[str]]) -> Union[str, List[str]]:
         """
         Execute commands
 
-        :param command: OpenDSS COM command in string
+        :param cmd_line: OpenDSS COM command in string or in list of strings
         """
-        self.ckt.cmd(command)
+        return self.ckt.cmd(cmd_line)
 
     def initialize(self, **kwargs):
         """
@@ -302,7 +305,8 @@ class DERInterface:
             # Update the voltages to OpenDER objects, and Compute DER output power
             der.update_der_input(v_pu=V, theta=theta)
             der.run()
-            print(der)
+            if self.print_der:
+                print(der)
 
     def __check_q(self):
         """

@@ -216,9 +216,9 @@ class XYPlots:
         self.plot_element.append(self.ax_pq.plot(x3, x4, color='red'))
 
         # Draw P max
-        self.plot_element.append(self.ax_pq.plot([self.__calc_P(1), self.__calc_P(1)], [-1, 1], color='green', label="P Max"))
+        self.plot_element.append(self.ax_pq.plot([self.__calc_P(1), self.__calc_P(1)], [-self.__calc_Q(1), self.__calc_Q(1)], color='green', label="P Max"))
         if type(self.der_obj) is opender.DER_BESS:
-            self.ax_pq.plot([self.__calc_P(-1), self.__calc_P(-1)], [-1, 1], color='green')
+            self.plot_element.append(self.ax_pq.plot([self.__calc_P(-1), self.__calc_P(-1)], [-self.__calc_Q(1), self.__calc_Q(1)], color='green'))
 
         # Draw Q requirements by IEEE 1547-2018
         self.plot_element.append(self.ax_pq.plot([self.__calc_P(0.2), self.__calc_Q(1)],
@@ -247,7 +247,7 @@ class XYPlots:
                 [self.__calc_P(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_ABS_PU'][i]),
                  self.__calc_P(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_ABS_PU'][i + 1])],
                 [self.__calc_Q(-self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_ABS_PU'][i]),
-                 self.__calc_P(-self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_ABS_PU'][i + 1])], color='blue'))
+                 self.__calc_Q(-self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_ABS_PU'][i + 1])], color='blue'))
 
         k=k+2
         self.plot_element.append(self.ax_pq.plot([0, 0], [0, 0], color='black', label="Q Inj Max"))
@@ -257,9 +257,9 @@ class XYPlots:
         self.meas_points = pd.DataFrame(self.meas_points_dict)
 
         for der_obj in self.plot_points:
-            self.ax_pq.scatter(self.__calc_P(der_obj.p_out_pu),self.__calc_Q(der_obj.q_out_pu), s=60, marker='^', color='blue')
+            self.ax_pq.scatter(self.__calc_Q(der_obj.p_out_pu),self.__calc_Q(der_obj.q_out_pu), s=60, marker='^', color='blue')
         for i, point in self.meas_points.iterrows():
-            self.ax_pq.scatter(self.__calc_P(self.meas_points['P'].values[i]), self.__calc_Q(self.meas_points['Q'].values[i]),
+            self.ax_pq.scatter(self.__calc_Q(self.meas_points['P'].values[i]), self.__calc_Q(self.meas_points['Q'].values[i]),
                                marker='v', s=60, color='purple')
 
         # Draw constant power factor line
@@ -455,7 +455,7 @@ class XYPlots:
         self.ax_v3.set_ylim(-max(x_a, x_b, x_c,y_a, y_b, y_c)*2, max(x_a, x_b, x_c, y_a, y_b, y_c)*2)
         plt.axis('equal')
 
-    def prepare_pf_plot(self, p_pre_list, p_avl_list=None):
+    def prepare_fp_plot(self, p_pre_list, p_avl_list=None):
         """
         Prepare plot with x-axis as F and y-axis as P. Frequency-droop curve is also plotted based on modeled OpenDER
         setting and provided pre-disturbance active power and available active power.
@@ -486,10 +486,15 @@ class XYPlots:
 
             f4 = self.der_file.OF2_TRIP_F
 
-            if -(f4 - 60 - self.der_file.PF_DBOF)/self.der_file.PF_KOF/60 + p_pre <= self.der_file.NP_P_MIN_PU:
-                p4 = self.der_file.NP_P_MIN_PU
-                p3 = self.der_file.NP_P_MIN_PU
-                f3 = ( p_pre- self.der_file.NP_P_MIN_PU) * self.der_file.PF_KOF*60 +60 + self.der_file.PF_DBOF
+            if self.der_file.NP_P_MIN_PU < 0:
+                NP_P_MIN_PU_eff = self.der_file.NP_P_MIN_PU * self.der_file.NP_P_MAX_CHARGE / self.der_file.NP_P_MAX
+            else:
+                NP_P_MIN_PU_eff = self.der_file.NP_P_MIN_PU
+
+            if -(f4 - 60 - self.der_file.PF_DBOF)/self.der_file.PF_KOF/60 + p_pre <= NP_P_MIN_PU_eff:
+                p4 = NP_P_MIN_PU_eff
+                p3 = NP_P_MIN_PU_eff
+                f3 = (p_pre- NP_P_MIN_PU_eff) * self.der_file.PF_KOF*60 + 60 + self.der_file.PF_DBOF
             else:
                 f3 = f4
                 p4 = p3 = -(f4 - 60 - self.der_file.PF_DBOF)/self.der_file.PF_KOF/60 + p_pre
@@ -521,7 +526,7 @@ class XYPlots:
                                marker='v', s=60, color='purple')
 
         self.ax_fp.legend(loc=1)
-        self.ax_fp.set_ylim(0, 1.05)
+        # self.ax_fp.set_ylim(0, 1.05)
         if self.pu:
             self.set_title_labels(self.ax_fp, 'Freq-droop', "Frequency (Hz)", "Active Power (pu)")
         else:
@@ -531,7 +536,7 @@ class XYPlots:
     ### Unpolished code for making animations
     ######################################################################################################
     # def prepare_ani(self):
-    #     print('preparing animations')
+    #     print_der('preparing animations')
     #
     #     from matplotlib.animation import FuncAnimation
     #
@@ -555,7 +560,7 @@ class XYPlots:
     #     self.point_hollow = self.ax_pq.scatter(self.__calc_P(self.plot_points[i].p_desired_pu),
     #                                            self.__calc_Q(self.plot_points[i].q_desired_pu), s=80,
     #                                            facecolors='none', edgecolors='green')
-    #     # print(self.const_pf_fig_obj)
+    #     # print_der(self.const_pf_fig_obj)
     #     v = self.plot_points[i].der_input.v_meas_pu
     #     self.time_text.set_text(f't={(i-2)*opender.der.DER.t_s:.1f}\r\nv_pu={v:.1f}')
     #
@@ -578,8 +583,8 @@ class XYPlots:
     #     return self.point, self.point_hollow, self.time_text,self.const_pf_fig_obj
     #
     # def save_ani(self,path='fig.mp4'):
-    #     print(f'Saving animations to {path}', end=' ')
+    #     print_der(f'Saving animations to {path}', end=' ')
     #     start = time.perf_counter()
     #     self.ani.save(path, fps=25, extra_args=['-vcodec', 'libx264'])
-    #     print(f"... Completed in {time.perf_counter()-start:.1f}s")
+    #     print_der(f"... Completed in {time.perf_counter()-start:.1f}s")
 

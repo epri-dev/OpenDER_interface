@@ -113,8 +113,8 @@ ax[2].set_title('P=1')
 #
 # pandas.set_option('display.max_columns', None)
 # pandas.set_option('display.width', 9999)
-# print(ckt_int.ckt.lines)
-# print(ckt_int.ckt.buses)
+# print_der(ckt_int.ckt.lines)
+# print_der(ckt_int.ckt.buses)
 
 #%%
 # connect a DER to each bus
