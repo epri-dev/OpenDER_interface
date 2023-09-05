@@ -90,7 +90,7 @@ for p in PV_profile:
     else:
         BESS_p = 0
 
-    if der_list[1].get_bess_soc() > 0.5 and p < 0.5:
+    if der_list[1].bess_soc > 0.5 and p < 0.5:
         BESS_p = 0.5-p
 
     ckt_int.update_der_p_pu(p_pu_list=[p, BESS_p])
@@ -115,7 +115,7 @@ for p in PV_profile:
             'BESS': der_list[1].q_out_pu,
         },
         {
-            'SOC':der_list[1].get_bess_soc()
+            'SOC':der_list[1].bess_soc
         }
     )
     # step tsim

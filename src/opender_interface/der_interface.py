@@ -90,7 +90,7 @@ class DERInterface:
 
         self.ckt.initialize(**kwargs)
 
-    def create_opender_objs(self, der_files: Union[Dict[str, DERCommonFileFormat], DERCommonFileFormat], p_pu=0) -> List[DER]:
+    def create_opender_objs(self, der_files: Union[Dict[str, DERCommonFileFormat], DERCommonFileFormat], p_pu=0) -> Union[List[DER_PV],List[DER_BESS]]:
         """
         Create OpenDER object on the circuit based on the DER configuration files provided. If a single
         DERCommonFileFormat object is provided, it is assumed all DERs on the circuit have the same ratings and control

@@ -131,7 +131,7 @@ while t < 1200:
     )
     t = t + tstep
 
-
+print(sum([ckt_int.vr_objs[vrname].total_sw for vrname in ckt_int.ckt.VRs.keys()]))
 # plot figure
 plot_obj.prepare()
 for ax in plot_obj.axes:
@@ -147,5 +147,5 @@ plot_obj.axes[0].set_xlim(0, 1500)
 plt.tight_layout()
 
 # plot_obj.save(save_folder.joinpath('simplot2.svg'), save_folder.joinpath('simplot2.pkl'))
-plot_obj.show()
+# plot_obj.show()
 
