@@ -106,7 +106,7 @@ class DERInterface:
 
         # If received a single configuration file, convert to a dictionary
         if isinstance(der_files, DERCommonFileFormat) or isinstance(der_files, DERCommonFileFormatBESS):
-            der_files= {der_obj[1]['name']: der_files for der_obj in self.ckt.DERs.iterrows()}
+            der_files = {der_obj[1]['name']: der_files for der_obj in self.ckt.DERs.iterrows()}
 
         for (index, der_i), setting in zip(self.ckt.DERs.iterrows(), der_files):
             created = False
@@ -223,8 +223,7 @@ class DERInterface:
         """
         for fdr_vrname in self.ckt.VRs.keys():
             self.vr_objs[fdr_vrname] = VR_Model(
-                Ts=100000,
-                # Ts=self.t_s,
+                Ts=self.t_s,
                 Td_ctrl=self.ckt.VRs[fdr_vrname]['delay'],
                 Td_tap=self.ckt.VRs[fdr_vrname]['tapdelay'],
                 Vref=self.ckt.VRs[fdr_vrname]['Vref'],

@@ -56,7 +56,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
         else:
             raise ValueError("OpenDSS Initializing cmd_list is not valid")
 
-    def initialize(self, DER_sim_type='PVSystem', **kwargs):
+    def initialize(self, DER_sim_type='pvsystem', **kwargs):
         """
         Initialize and obtain circuit information. please use the variable of DER_sim_type
         to provide the type of PC element which represents DERs (generator, PVSystem, isource, or vsource)
@@ -242,7 +242,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
             bus = self.dss.text(f'? PVSystem.{PVname}.bus1')
             kvarabs = float(self.dss.text(f'? PVSystem.{PVname}.kvarmaxabs'))
             kV = float(self.dss.text(f'? PVSystem.{PVname}.kv'))
-            this_type = 'PVSystem'
+            this_type = 'pvsystem'
             PVs.append({
                 'name': PVname,
                 'type': this_type,
@@ -401,7 +401,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
         for der_obj, P_gen, Q_gen in zip(der_list, p_list, q_list):
 
             name = der_obj.name
-            if self.DER_sim_type == 'PVSystem':
+            if self.DER_sim_type == 'pvsystem':
                 self.cmd(f'{self.DER_sim_type}.{name}.Pmpp={P_gen}')
                 self.cmd(f'{self.DER_sim_type}.{name}.kvar={Q_gen}')
 
