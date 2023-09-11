@@ -89,7 +89,7 @@ class TimePlots:
 
             self.axes[i].legend(loc=2)
         self.axes[-1].set_xlabel('Time (s)')
-        plt.tight_layout()
+        # plt.tight_layout()
 
     def show(self):
         """

@@ -37,18 +37,17 @@ ckt_int.initialize()
 ckt_int.create_vr_objs()
 
 # connect a DER to each bus and create DER model interface
-der_file = DERCommonFileFormat(NP_VA_MAX=400000,
-                               NP_P_MAX=400000,
-                               NP_Q_MAX_INJ=176000,
-                               NP_Q_MAX_ABS=176000,
-                               NP_ABNORMAL_OP_CAT='CAT_III',
-                               # QV_MODE_ENABLE=True,
+der_file = DERCommonFileFormat(NP_VA_MAX=300000,
+                               NP_P_MAX=300000,
+                               NP_Q_MAX_INJ=132000,
+                               NP_Q_MAX_ABS=132000,
+                               QV_MODE_ENABLE=True,
 
-                               ES_DELAY=00,
+                               ES_DELAY=300,
                                ES_RAMP_RATE=0,
-                               ES_RANDOMIZED_DELAY=00,)
+                               ES_RANDOMIZED_DELAY=0,)
 
-der_list = ckt_int.create_opender_objs(p_pu=0.8,der_files=der_file)
+der_list = ckt_int.create_opender_objs(p_pu=1,der_files=der_file)
 
 
 # add a fault branch to the circuit, disable the fault by setting very high impedance
@@ -130,8 +129,8 @@ while t < 1200:
         result2, result4
     )
     t = t + tstep
-
-print(sum([ckt_int.vr_objs[vrname].total_sw for vrname in ckt_int.ckt.VRs.keys()]))
+print('-------------------------------------------------------------')
+print(f'Total number of tap operations is {sum([ckt_int.vr_objs[vrname].total_sw for vrname in ckt_int.ckt.VRs.keys()])}')
 # plot figure
 plot_obj.prepare()
 for ax in plot_obj.axes:
@@ -146,6 +145,6 @@ plot_obj.axes[0].set_xlim(0, 1500)
 
 plt.tight_layout()
 
-plot_obj.save('simplot2.svg')
+# plot_obj.save('simplot2.svg')
 plot_obj.show()
 
