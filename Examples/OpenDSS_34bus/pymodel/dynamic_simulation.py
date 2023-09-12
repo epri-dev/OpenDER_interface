@@ -44,7 +44,7 @@ der_file = DERCommonFileFormat(NP_VA_MAX=300000,
                                QV_MODE_ENABLE=True,
 
                                ES_DELAY=300,
-                               ES_RAMP_RATE=0,
+                               ES_RAMP_RATE=300,
                                ES_RANDOMIZED_DELAY=0,)
 
 der_list = ckt_int.create_opender_objs(p_pu=1,der_files=der_file)
@@ -75,23 +75,23 @@ while t < 1200:
     else:
         ckt_int.cmd('Edit Fault.F1 R=1000000')
 
+    # Obtain system voltage from previous power flow solution
     ckt_int.read_sys_voltage()
-
-    # simulate der dynamics
+    # Simulate DER dynamics
     ckt_int.run()
-
-    # get der injection
-    total_gen_kw = 0
-
+    # Update DER outputs to circuit simulation
     ckt_int.update_der_output_powers()
-    kw = sum([der.p_out_kw for der in ckt_int.der_objs])
-
-    # change load level
-    mult = np.interp(t, load_profile.index, load_profile['mult'])
-    # ckt_int.load_scaling(mult)
-    
-    # solve load flow
+    # Solve load flow
     ckt_int.solve_power_flow()
+
+    # get DER injection
+    kw = sum([der.p_out_kw for der in ckt_int.der_objs])
+    
+    # save result
+    result1 = {}
+    result2 = {}
+    result3 = {}
+    result4 = {}
 
     # simulate vr control
     for vrname in ckt_int.ckt.VRs.keys():
@@ -101,12 +101,6 @@ while t < 1200:
 
     # set the new tap position into opendss
     ckt_int.write_vr()
-    
-    # save result
-    result1 = {}
-    result2 = {}
-    result3 = {}
-    result4 = {}
 
     for der in ckt_int.der_objs:
         result1['q_out_pu({})'.format(der.name)] = der.p_out_pu
