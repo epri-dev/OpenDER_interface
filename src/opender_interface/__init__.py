@@ -1,3 +1,5 @@
+__version__ = '1.0.0'
+
 from .der_interface import DERInterface
 from .dx_tool_interface import DxToolInterfacesABC
 from .opendss_interface import OpenDSSInterface

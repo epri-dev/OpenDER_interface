@@ -485,6 +485,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
     def read_line_flow(self) -> pd.DataFrame:
         """
         Read and return power flow on all lines, obtained from circuit simulators
+
         :return: power flow information in DataFrame, indexed by line names. Also accessed by .lines
         """
 
@@ -518,11 +519,10 @@ class OpenDSSInterface(DxToolInterfacesABC):
         """
         self.dss.vsources.pu = v_pu
 
-    '''
-    Initialize "vrStates" based on dss file
-    '''
-
     def __init_vr(self):
+        """
+        Read the information of all the voltage regulators into this class, stored in self._VRs
+        """
         # self.vrStates = []
         VR_names = list(self.dss.regcontrols.names)
         if VR_names[0] == 'NONE':
@@ -572,7 +572,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
 
     def read_vr(self):
         """
-        Read voltage regulator tap information from OpenDSS circuit into "vtStates"
+        Read voltage regulator tap information from OpenDSS circuit into self._VR
         """
         for vrname in self._VRs.keys():
             self._VRs[vrname]['tapPos'] = int(self.cmd('? regcontrol.{}.tapNum'.format(vrname)))
@@ -580,7 +580,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
 
     def write_vr(self):
         """
-        Write voltage regulator tap information from "vtStates" into OpenDSS circuit simulation.
+        Write voltage regulator tap information from self._VR into OpenDSS circuit simulation.
         """
         for vrname in self._VRs.keys():
             self.cmd('edit regcontrol.{} tapNum={}'.format(vrname, self._VRs[vrname]['UpdatedTap']))

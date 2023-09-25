@@ -16,9 +16,6 @@ class TimePlots:
     After simulation, the plot is prepared by self.prepare(), ready to be saved or shown.
     """
 
-    '''
-    Initialization, The input parameters "rows" and "cols" dictate the arrangement of subplots.
-    '''
     def __init__(self, rows: int, cols: int = 1, title: list = None, ylabel: list = None):
         """
         :param rows: Rows of the plots
@@ -40,10 +37,6 @@ class TimePlots:
         for i in range(self.num_of_inputs-1):
             self.traces.append([])
 
-    '''
-
-    '''
-
     def add_to_traces(self, *args):
         """
         Add datapoints to the plots. Each subplot should have one dictionary containing its plotted value.
@@ -63,9 +56,7 @@ class TimePlots:
         for i,arg in enumerate(args):
             self.traces[i].append(arg)
 
-    '''
-    Plot traces of each subplot
-    '''
+
     def prepare(self):
         """
         Prepare the time plot
@@ -97,12 +88,6 @@ class TimePlots:
         """
         plt.show()
 
-    '''
-    Save figure as svg file.
-    Input parameters:
-        path: figure name
-        datapath: the file used for save trace date  
-    '''
     def save(self, path='fig.svg', datapath=None):
         """
         Save figure. The file extension has to be provided. If datapath is provided, the plot figure will be saved as
@@ -185,6 +170,7 @@ class TimePlots:
     def save_ani(self,path='fig.mp4'):
         """
         Save animation to a mp4 file.
+
         :param path: Saved mp4 animation path. If not provided, default as 'fig.mp4' in the same folder
         """
         print(f'Saving animations to {path}', end=' ')
