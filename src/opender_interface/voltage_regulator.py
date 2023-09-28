@@ -21,8 +21,8 @@ class VR_Model(object):
                  Td_tap=2,          # delay time for tapping (s)
                  Vref=120,          # reference voltage in 120V base (V)
                  db=2,              # deadband in 120V base (V)
-                 LDC_R=0,           # LDC r
-                 LDC_X=0,           # LDC x
+                 LDC_R=0,           # Line Drop Compensation R
+                 LDC_X=0,           # Line Drop Compensation X
                  PT_Ratio=120,      # PT ratio (Vpri/Vsec)
                  CT_Primary=100,    # CT primary rating (A)
                  tap_max=16,        # maximum tap position
@@ -57,13 +57,12 @@ class VR_Model(object):
             Ipri=[],    # primary current (complex number in A)
             ):
         """
-        Determine voltage regulator tap position
+        Determine voltage regulator tap position. If Vreg is not provided, Vreg will
+        be calculated based on Vpri and Ipri and line drop compensation parameters.
         """
 
         # input conditioning
-        if Vreg != None:
-            pass
-        else:
+        if Vreg is None:
             Vsec = [x / self.PT_Ratio for x in Vpri]
             if Ipri != []:
                 Vldc = [x / self.CT_Primary * (self.LDC_R + 1j * self.LDC_X) for x in Ipri]

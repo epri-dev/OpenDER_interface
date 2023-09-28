@@ -8,8 +8,6 @@ Introduction
 This is the interfaces designed for `OpenDER <https://github.com/epri-dev/opender/>`__ model, aiming to establish
 connections with power system simulators. Current version offers support for interfacing with OpenDSS.
 
-Modules
-=======
 This package include the following function modules:
 
 * OpenDER interface (OpenDERInterface) with distribution system simulators. Currently the interface to OpenDSS is
@@ -22,8 +20,11 @@ This package include the following function modules:
 Installation
 ============
 **Users are encouraged and expected to make changes to this package for their usage.**
-Please install the package locally using the following command at the root directory, where 'setup.py' resides.
-Dependencies will be automatically installed:
+To encourage modifications and changes to this OpenDER model interface, this package is not currently released as a
+package on PyPI.
+
+To use it, please install the package locally using the following command at the root directory, where 'setup.py'
+resides. Dependencies will be automatically installed:
 
     ``pip install -e ./``
 
