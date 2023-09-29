@@ -25,9 +25,10 @@ def read(*names, **kwargs):
 
 setup(
     name='opender_interface',
-    version='0.0.0',
-    license='DECIDE later',
-    description='Interface to OpenDER',
+    version='1.0.0',
+    license='BSD',
+    description='This is the modeling interface to utilize the open source DER (OpenDER) model for circuit level '
+                'steady-state and dynamic simulations.',
     long_description='%s\n%s' % (
         re.compile('^.. start-badges.*^.. end-badges', re.M | re.S).sub('', read('README.rst')),
         re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.rst'))
@@ -45,22 +46,8 @@ setup(
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        # 'License :: OSI Approved :: MIT License',
-        # 'Operating System :: Unix',
-        # 'Operating System :: POSIX',
-        # 'Operating System :: Microsoft :: Windows',
-        #'Programming Language :: Python',
-        #'Programming Language :: Python :: 2.7',
-        # 'Programming Language :: Python :: 3',
-        #'Programming Language :: Python :: 3.5',
-        # 'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.11',
-        # 'Programming Language :: Python :: Implementation :: CPython',
-        # 'Programming Language :: Python :: Implementation :: PyPy',
-        # uncomment if you test on these interpreters:
-        # 'Programming Language :: Python :: Implementation :: IronPython',
-        # 'Programming Language :: Python :: Implementation :: Jython',
-        # 'Programming Language :: Python :: Implementation :: Stackless',
+        'License :: OSI Approved :: BSD License',
         'Topic :: Utilities',
     ],
     project_urls={
@@ -71,8 +58,8 @@ setup(
     keywords=[
         # eg: 'keyword1', 'keyword2', 'keyword3',
     ],
-    python_requires='>=3.7',
-    install_requires=["numpy", "opender>=2.1", "py-dss-interface>=2.0.0", "matplotlib", "pandas", "openpyxl"], #"scipy",
+    python_requires='>=3.11',
+    install_requires=["numpy", "opender>=2.1", "py-dss-interface>=2.0.0", "matplotlib", "pandas"], #"scipy",
     extras_require={
            "dev": ["pytest", "pytest-cov", "sphinx-rtd-theme", "nbsphinx", "black", "pre-commit", "tox", "twine", "jupyter"],
         # eg:
