@@ -6,10 +6,10 @@ from opender_interface.der_interface import DERInterface
 from opender import DERCommonFileFormat
 
 '''
-This is an example used for comparing OpenDSS internal inverter model with OpenDER's performance
+This is an example comparing the system voltage profile and load flow with and without DER
 '''
 
-#circuit path
+# circuit path
 script_path = pathlib.Path(os.path.dirname(__file__))
 circuit_folder = script_path.parents[0].joinpath("IEEE_34Bus")
 dss_file = circuit_folder.joinpath("ieee34Mod2_der.dss")
@@ -23,8 +23,7 @@ ckt_int = DERInterface(ckt)
 # initialize circuit
 ckt_int.initialize(DER_sim_type='PVSystem')
 
-
-# This plot illustrates the variation of bus voltages along power lines
+# This function plots voltage profile for a specific phase.
 def plot_voltage_profile(ax, data_label, data_color):
 
     # Lines
@@ -52,8 +51,9 @@ def plot_voltage_profile(ax, data_label, data_color):
     ax.scatter(ckt_int.ckt.buses['distance'], ckt_int.ckt.buses[data_label], label=data_label, color=data_color)
 
 
+# This function plots power flow profile for a specific phase.
 def plot_power_profile(ax, data_label, data_color):
-    # # Lines
+    # Lines
     i=0
     for index, line in ckt_int.ckt.lines.iterrows():
 
@@ -72,16 +72,18 @@ def plot_power_profile(ax, data_label, data_color):
         i=i+1
 
 
+# create an OpenDER object to each PVSystem in DSS circuit
+der_file = DERCommonFileFormat(NP_VA_MAX=300000,
+                               NP_P_MAX=300000,
+                               NP_Q_MAX_INJ=300000,
+                               NP_Q_MAX_ABS=300000,
+                               CONST_PF_MODE_ENABLE=True,
+                               CONST_PF=0.9,
+                               CONST_PF_EXCITATION='ABS')
+der_list = ckt_int.create_opender_objs(der_file, p_pu=1)
 
-# set PV system output power
-scale = 1
-for i, PV in ckt_int.ckt.DERs.iterrows():
-    name = PV['name']
-    ckt_int.cmd(f'PVSystem.{name}.%Pmpp={scale * 100}')
-
-
-ckt_int.enable_control()
-ckt_int.solve_power_flow()
+# run a load flow and check the feeder total power
+ckt_int.der_convergence_process()
 ckt_int.read_sys_voltage()
 ckt_int.read_line_flow()
 
@@ -98,7 +100,6 @@ ax[0].grid(visible=True)
 ax[0].legend(loc=2)
 ax[0].set_title('P=1')
 
-
 plot_power_profile(ax[2],'flowS_A','blue')
 plot_power_profile(ax[2],'flowS_B','orange')
 plot_power_profile(ax[2],'flowS_C','green')
@@ -109,28 +110,15 @@ ax[2].set_ylabel('Power (kW)')
 ax[2].grid(visible=True)
 ax[2].legend(loc=2)
 ax[2].set_title('P=1')
-# import pandas
-#
-# pandas.set_option('display.max_columns', None)
-# pandas.set_option('display.width', 9999)
-# print_der(ckt_int.ckt.lines)
-# print_der(ckt_int.ckt.buses)
 
-#%%
-# connect a DER to each bus
-der_file = DERCommonFileFormat(NP_VA_MAX=400000,
-                               NP_P_MAX=400000,
-                               NP_Q_MAX_INJ=400000,
-                               NP_Q_MAX_ABS=400000,
-                               CONST_PF_MODE_ENABLE=True,
-                               CONST_PF=0.9,
-                               CONST_PF_EXCITATION='ABS')
-der_list = ckt_int.create_opender_objs(der_file, p_pu=0)
 
+# update DER output powers to 0
+ckt_int.update_der_p_pu([0,0,0,0,0])
 # run a load flow and check the feeder total power
 ckt_int.der_convergence_process()
 ckt_int.read_sys_voltage()
 ckt_int.read_line_flow()
+
 
 plot_voltage_profile(ax[1],'Vpu_A','blue')
 plot_voltage_profile(ax[1],'Vpu_B','orange')

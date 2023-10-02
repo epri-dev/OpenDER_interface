@@ -576,7 +576,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
         """
         for vrname in self._VRs.keys():
             self._VRs[vrname]['tapPos'] = int(self.cmd('? regcontrol.{}.tapNum'.format(vrname)))
-            print(self._VRs[vrname]['tapPos'])
+            # print(self._VRs[vrname]['tapPos'])
 
     def write_vr(self):
         """

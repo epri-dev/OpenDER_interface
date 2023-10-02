@@ -32,7 +32,7 @@ This package include the following function modules:
   active power-reactive power, frequency-active power, etc.
 * Voltage regulator model (VR_Model) external to the circuit simulation tool to all dynamic / time series simulation
 
-Selected module and methods are shown below.
+Selected major module and methods are shown below.
 
 .. image:: doc/modules.png
     :alt: Major components in OpenDER interface
@@ -52,11 +52,11 @@ resides. Dependencies will be automatically installed:
 
 Examples
 =========
-* volt-var - demonstrate plotting capabilities
+* plot_volt-var: demonstrate plotting capabilities
 * OpenDSS_34bus - dynamic simulation: interactions between voltage regulators and DER enter service performance
 * OpenDSS_34bus - steady state simulation: comparison between OpenDSS internal inverter model vs OpenDER
-* OpenDSS_GFOV - single_isource: dynamic simulation of isource experiencing a ground fault over voltage
-* OpenDSS_GFOV - single_vsource: dynamic simulation of vsource experiencing a ground fault over voltage
+* OpenDSS_GFOV - single_isource: dynamic simulation of isource experiencing a ground fault over-voltage
+* OpenDSS_GFOV - single_vsource: dynamic simulation of vsource experiencing a ground fault over-voltage
 * OpenDSS_BESS_PV - 15min time series simulation using BESS for PV power peak shaving
 
 

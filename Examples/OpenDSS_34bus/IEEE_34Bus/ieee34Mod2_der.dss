@@ -187,11 +187,11 @@ Load.d844_846b.vminpu=0.85 daily=default
 Load.d844_846c.vminpu=0.85 daily=default
 Load.d846_848b.vminpu=0.85 daily=default
 
-New PVSystem.PV_1(824) Bus1=824.1.2.3 Phases=3, kV=24.9 Pmpp=300 kVA=300 irradiance=1 kvarMax=132.0 kvarMaxAbs=-132.0 PFpriority=Yes pf=-0.9
-New PVSystem.PV_2(858) Bus1=858.1.2.3 Phases=3, kV=24.9 Pmpp=300 kVA=300 irradiance=1 kvarMax=132.0 kvarMaxAbs=-132.0 PFpriority=Yes pf=-0.9
-New PVSystem.PV_3(848) Bus1=848.1.2.3 Phases=3, kV=24.9 Pmpp=300 kVA=300 irradiance=1 kvarMax=132.0 kvarMaxAbs=-132.0 PFpriority=Yes pf=-0.9
-New PVSystem.PV_4(840) Bus1=840.1.2.3 Phases=3, kV=24.9 Pmpp=300 kVA=300 irradiance=1 kvarMax=132.0 kvarMaxAbs=-132.0 PFpriority=Yes pf=-0.9
-New PVSystem.PV_5(854) Bus1=854.1.2.3 Phases=3, kV=24.9 Pmpp=300 kVA=300 irradiance=1 kvarMax=132.0 kvarMaxAbs=-132.0 PFpriority=Yes pf=-0.9
+New PVSystem.PV_1(824) Bus1=824.1.2.3 Phases=3, kV=24.9 Pmpp=300 kVA=300 irradiance=1
+New PVSystem.PV_2(858) Bus1=858.1.2.3 Phases=3, kV=24.9 Pmpp=300 kVA=300 irradiance=1
+New PVSystem.PV_3(848) Bus1=848.1.2.3 Phases=3, kV=24.9 Pmpp=300 kVA=300 irradiance=1
+New PVSystem.PV_4(840) Bus1=840.1.2.3 Phases=3, kV=24.9 Pmpp=300 kVA=300 irradiance=1
+New PVSystem.PV_5(854) Bus1=854.1.2.3 Phases=3, kV=24.9 Pmpp=300 kVA=300 irradiance=1
 
 ! Allow the DSS to estimate the voltage bases from this list
 Set VoltageBases = [69, 24.9, 4.16, 0.48]

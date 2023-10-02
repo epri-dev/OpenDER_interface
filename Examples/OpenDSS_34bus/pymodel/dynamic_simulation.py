@@ -18,10 +18,9 @@ This example demonstrates the DER enter service performance and its interactions
 script_path = pathlib.Path(os.path.dirname(__file__))
 circuit_folder = script_path.parents[0].joinpath("IEEE_34Bus")
 dss_file = circuit_folder.joinpath("ieee34Mod2_der.dss")
-load_file = script_path.joinpath("load_profile.xlsx")
-
-# import load profile
-load_profile = pd.read_excel(load_file, index_col=0)
+# load_file = script_path.joinpath("load_profile.xlsx")
+# # import load profile
+# load_profile = pd.read_excel(load_file, index_col=0)
 
 # simulation time step
 tstep = 1
@@ -43,7 +42,7 @@ der_file = DERCommonFileFormat(NP_VA_MAX=300e3,
                                NP_Q_MAX_ABS=132e3,
                                QV_MODE_ENABLE=True,
 
-                               ES_DELAY=30,
+                               ES_DELAY=300,
                                ES_RAMP_RATE=30,
                                ES_RANDOMIZED_DELAY=0,)
 
@@ -57,7 +56,7 @@ ckt_int.cmd('Edit Fault.F1 R=1000000')
 t = 0
 plot_obj = TimePlots(3, 1, ['DER output Power (kW)', 'Voltage Regulator Voltages (120V)', 'Voltage Regulator Tap Position'])
 
-# Initialize
+# Solve power flow to get an initial simulation condition to start the dynamic simulation
 ckt_int.enable_control()
 # mult = np.interp(0, load_profile.index, load_profile['mult'])
 # ckt_int.load_scaling(mult)
@@ -81,6 +80,14 @@ while t < 1200:
     ckt_int.run()
     # Update DER outputs to circuit simulation
     ckt_int.update_der_output_powers()
+    # simulate vr control
+    for vrname in ckt_int.ckt.VRs.keys():
+        Vpri, Ipri = ckt_int.read_vr_v_i(vrname)
+        # run the vr control logic
+        ckt_int.vr_objs[vrname].run(Vpri = Vpri, Ipri = Ipri)
+    # set the new tap position into opendss
+    ckt_int.write_vr()
+
     # Solve load flow
     ckt_int.solve_power_flow()
 
@@ -93,15 +100,6 @@ while t < 1200:
     result3 = {}
     result4 = {}
 
-    # simulate vr control
-    for vrname in ckt_int.ckt.VRs.keys():
-        Vpri, Ipri = ckt_int.read_vr_v_i(vrname)
-        # run the vr control logic
-        ckt_int.vr_objs[vrname].run(Vpri = Vpri, Ipri = Ipri)
-
-    # set the new tap position into opendss
-    ckt_int.write_vr()
-
     for der in ckt_int.der_objs:
         result1['q_out_pu({})'.format(der.name)] = der.p_out_pu
         # result['qout({})'.format(der.name)] = der.q_out_kvar
@@ -112,7 +110,7 @@ while t < 1200:
     for vrname in ckt_int.ckt.VRs.keys():
         if vrname[-1]=='a':
             result4[f'Tap ({vrname})'] = ckt_int.vr_objs[vrname].tap
-            result2[f'V ({vrname})'] = ckt_int.vr_objs[vrname].V
+            result2[f'V ({vrname})'] = ckt_int.vr_objs[vrname].Vreg
 
     plot_obj.add_to_traces(
         {
