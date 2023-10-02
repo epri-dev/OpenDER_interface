@@ -1,0 +1,18 @@
+Clear
+
+New Circuit.ckt1 pu=1.05  r1=0.1  x1=0.6  r0=0.1 x0=0.6  bus1= sub_src basekv = 12.47
+
+New line.line1 bus1=sub_src  bus2=xfmr_g  r1=1.05 x1=2.898  r0=2.0  x0=7.36  phases=3  enabled=true
+
+New load.load1 Bus1=xfmr_g.1.2.3 Phases=3 Conn=Delta Model=5 kV= 12 kW=5000.0 kVAR= 0000.0 vminpu=0.1
+
+new transformer.reg1a phases=3 windings=2 buses=(xfmr_g xfmr_l) conns='wye wye' kvs="12.47 12.47" kvas="10000 10000" XHL=.01
+~ wdg=1 %r=.0001 wdg=2 %r=.0001 ppm=0
+new regcontrol.creg1a transformer=reg1a winding=2 vreg=120 band=4 ptratio=60.5 ctprim=100 R=2.7 X=1.6 delay=30 tapdelay = 2
+
+New line.line2 bus1=xfmr_l  bus2=der  r1=0.105 x1=0.2898  r0=0.20  x0=0.736  phases=3  enabled=true
+
+
+
+Calcv
+solve

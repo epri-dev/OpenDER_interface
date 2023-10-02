@@ -115,9 +115,9 @@ New Load.S830c      Bus1=830.3.1 Phases=1 Conn=Delta Model=2 kV= 24.900 kW=  25.
 New Load.S890       Bus1=890     Phases=3 Conn=Delta Model=5 kV=  4.160 kW= 450.0 kVAR= 225.0
 
 ! distributed loads connected to line mid points
-New Load.D802_806b Bus1=Mid806.2   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=  30   kVAR=  15
-New Load.D802_806c Bus1=Mid806.3   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=  25   kVAR=  14
-New Load.D808_810b Bus1=Mid810.2   Phases=1 Conn=Wye   Model=5 kV= 14.376 kW=  16   kVAR=   8
+New Load.D802_806b Bus1=Mid806.2   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=  300   kVAR=  150
+New Load.D802_806c Bus1=Mid806.3   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=  250   kVAR=  140
+New Load.D808_810b Bus1=Mid810.2   Phases=1 Conn=Wye   Model=5 kV= 14.376 kW=  160   kVAR=   80
 New Load.D818_820a Bus1=mid820.1   Phases=1 Conn=Wye   Model=2 kV= 14.376 kW=  34   kVAR=  17
 New Load.D820_822a Bus1=mid822.1   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW= 135   kVAR=  70
 New Load.D816_824b Bus1=mid824.2.3 Phases=1 Conn=Delta Model=5 kV= 24.900 kW=   5   kVAR=   2
@@ -136,15 +136,15 @@ New Load.D834_860a Bus1=mid860.1.2 Phases=1 Conn=Delta Model=2 kV= 24.900 kW=  1
 New Load.D834_860b Bus1=mid860.2.3 Phases=1 Conn=Delta Model=2 kV= 24.900 kW=  20.0 kVAR=  10
 New Load.D834_860c Bus1=mid860.3.1 Phases=1 Conn=Delta Model=2 kV= 24.900 kW= 110   kVAR=  55
 New Load.D860_836a Bus1=mid836.1.2 Phases=1 Conn=Delta Model=1 kV= 24.900 kW=  30   kVAR=  15
-New Load.D860_836b Bus1=mid836.2.3 Phases=1 Conn=Delta Model=1 kV= 24.900 kW=  10   kVAR=   6
-New Load.D860_836c Bus1=mid836.3.1 Phases=1 Conn=Delta Model=1 kV= 24.900 kW=  42   kVAR=  22
+New Load.D860_836b Bus1=mid836.2.3 Phases=1 Conn=Delta Model=1 kV= 24.900 kW=  100   kVAR=   60
+New Load.D860_836c Bus1=mid836.3.1 Phases=1 Conn=Delta Model=1 kV= 24.900 kW=  420   kVAR=  220
 New Load.D836_840a Bus1=mid840.1.2 Phases=1 Conn=Delta Model=5 kV= 24.900 kW=  18   kVAR=   9
 New Load.D836_840b Bus1=mid840.2.3 Phases=1 Conn=Delta Model=5 kV= 24.900 kW=  22   kVAR=  11
 New Load.D862_838b Bus1=mid838.2   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=  28.0 kVAR=  14
 New Load.D842_844a Bus1=mid844.1   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=   9   kVAR=   5
-New Load.D844_846b Bus1=mid846.2   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=  25   kVAR=  12
+New Load.D844_846b Bus1=mid846.2   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=  250   kVAR=  120
 New Load.D844_846c Bus1=mid846.3   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=  20   kVAR=  11
-New Load.D846_848b Bus1=mid848.2   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=  23   kVAR=  11
+New Load.D846_848b Bus1=mid848.2   Phases=1 Conn=Wye   Model=1 kV= 14.376 kW=  230   kVAR=  110
 
 ! Override Vminpu property to allow convergence at a lower per unit voltage.
 ! Define the daily load shape to the DSS default
@@ -187,25 +187,15 @@ Load.d844_846b.vminpu=0.85 daily=default
 Load.d844_846c.vminpu=0.85 daily=default
 Load.d846_848b.vminpu=0.85 daily=default
 
-New Generator.der(mid806) Bus1=mid806.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=38.5 minkvar=-38.5
-New Generator.der(mid824) Bus1=mid824.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=3.5 minkvar=-3.5
-New Generator.der(mid828) Bus1=mid828.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=2.8 minkvar=-2.8
-New Generator.der(mid830) Bus1=mid830.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=4.8999999999999995 minkvar=-4.8999999999999995
-New Generator.der(830) Bus1=830.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=31.499999999999996 minkvar=-31.499999999999996
-New Generator.der(mid858) Bus1=mid858.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=10.5 minkvar=-10.5
-New Generator.der(mid834) Bus1=mid834.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=22.4 minkvar=-22.4
-New Generator.der(mid840) Bus1=mid840.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=28.0 minkvar=-28.0
-New Generator.der(840) Bus1=840.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=18.9 minkvar=-18.9
-New Generator.der(mid844) Bus1=mid844.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=6.3 minkvar=-6.3
-New Generator.der(844) Bus1=844.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=283.5 minkvar=-283.5
-New Generator.der(mid846) Bus1=mid846.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=31.499999999999996 minkvar=-31.499999999999996
-New Generator.der(mid848) Bus1=mid848.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=16.099999999999998 minkvar=-16.099999999999998
-New Generator.der(848) Bus1=848.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=42.0 minkvar=-42.0
-New Generator.der(mid860) Bus1=mid860.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=102.19999999999999 minkvar=-102.19999999999999
-New Generator.der(860) Bus1=860.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=42.0 minkvar=-42.0
-New Generator.der(mid836) Bus1=mid836.1.2.3 Phases=3, Conn=Wye Model=4 kV=24.9 kW=0 kvar=0 maxkvar=57.4 minkvar=-57.4
-New Generator.der(890) Bus1=890.1.2.3 Phases=3, Conn=Wye Model=4 kV=4.16 kW=0 kvar=0 maxkvar=315.0 minkvar=-315.0
+!New Generator.PV_1(802) Bus1=800.1.2.3 Phases=3, Conn=Wye kV=24.9 kW=000 kvar=0 model=4
+!New Generator.BESS_1(800) Bus1=800.1.2.3 Phases=3, Conn=Wye kV=24.9 kW=000 kvar=0 model=4
+New PVSystem.BESS_1(802) Bus1=802.1.2.3 Phases=3, kV=24.9 Pmpp=400 kVA=10000 irradiance=1 kvarMax=4400.0 kvarMaxAbs=-4400.0 PFpriority=Yes pf=-0.9
+
 
 ! Allow the DSS to estimate the voltage bases from this list
 Set VoltageBases = [69, 24.9, 4.16, 0.48]
 CalcVoltageBases
+
+new energymeter.Meter element=line.L1 terminal=1
+solve
+Buscoords IEEE34_BusXY.csv

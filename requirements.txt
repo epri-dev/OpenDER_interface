@@ -1,6 +1,5 @@
 numpy
 opender>=2.0.0
-py-dss-interface
+py-dss-interface>=2.0.0
 matplotlib
 pandas
-openpyxl

@@ -1,0 +1,25 @@
+figure.facecolor : white
+axes.labelcolor : .15
+xtick.direction : out
+ytick.direction : out
+xtick.color : .15
+ytick.color : .15
+axes.axisbelow : True
+grid.linestyle : --
+text.color : .15
+lines.solid_capstyle : round
+patch.edgecolor : w
+patch.force_edgecolor : True
+xtick.top : False
+ytick.right : False
+axes.grid : True
+axes.facecolor : white
+axes.edgecolor : .8
+grid.color : .8
+axes.spines.left : True
+axes.spines.bottom : True
+axes.spines.right : True
+axes.spines.top : True
+xtick.bottom : False
+ytick.left : False
+

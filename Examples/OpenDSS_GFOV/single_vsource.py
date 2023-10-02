@@ -3,27 +3,36 @@ import os
 import pathlib
 import matplotlib.pyplot as plt
 from opender_interface.opendss_interface import OpenDSSInterface
-from opender_interface.opender_interface import OpenDERInterface
+from opender_interface.der_interface import DERInterface
 from opender import DER, DERCommonFileFormat
 from opender_interface.time_plots import TimePlots
 from opender_interface.xy_plot import XYPlots
 
+'''
+This is an example demonstrating the dynamic behavior of vsource experiencing a ground fault over voltage
+'''
 
 # substation initial voltage
 vsub0 = 1.00
 
+# circuit configuration path
 script_path = pathlib.Path(os.path.dirname(__file__))
 circuit_folder = script_path.joinpath("circuit")
 dss_file = circuit_folder.joinpath("single_vsource_gfov.dss")
 
 # configure the dynamic simulation
-delt = 0.0004  # sampling time step (s)
+delt = 0.01  # sampling time step (s)
 
 
-# %%
-ckt_int = OpenDERInterface(dss_file, t_s=delt)
+
+# create DERInterface
+ckt = OpenDSSInterface(str(dss_file))
+ckt_int = DERInterface(ckt, t_s=delt)
+
+# initialize circuit
 ckt_int.initialize(DER_sim_type='vsource',)
 
+# initialize DER object
 der_file = DERCommonFileFormat(NP_VA_MAX=100000,
                                NP_P_MAX=100000,
                                NP_Q_MAX_INJ=44000,
@@ -50,11 +59,14 @@ tevt2 = 0.4
 tend = 0.6  # total simulation time (s)
 
 vsub = vsub0
+
+# create plot objects
 plot_obj = TimePlots(3,1)
 v_plt_load = XYPlots(der_list[0])
 v_plt_derh = XYPlots(der_list[0])
 v_plt_derl = XYPlots(der_list[0])
 
+# simulation
 while tsim < tend:
     # step reference / perturbation
 
@@ -63,14 +75,11 @@ while tsim < tend:
     if tsim >= tevt2:
         ckt_int.ckt.cmd('open line.line1')
 
-    ckt_int.run()
+    ckt_int.der_convergence_process()
 
-    ckt_int.update_der_output_powers(der_list)
-
-    ckt_int.solve_power_flow()
     ckt_int.read_line_flow()
 
-    print(tsim, ckt_int.ckt.dss.bus_pu_voltages(), (ckt_int.ckt.lines[['flowS_A', 'flowS_B', 'flowS_C']])) #,'flowS_A', 'flowS_B', 'flowS_C'
+    print(tsim, ckt_int.ckt.dss.bus.pu_voltages, (ckt_int.ckt.lines[['flowS_A', 'flowS_B', 'flowS_C']])) #,'flowS_A', 'flowS_B', 'flowS_C'
     # log result
     plot_obj.add_to_traces(
         {
@@ -96,13 +105,16 @@ while tsim < tend:
     ckt_int.read_sys_voltage()
     tsim = tsim + delt
 
+# plot result
 plot_obj.prepare()
 plot_obj.show()
 
-v_plt_derh.prepare_v3_plot(xy=ckt_int.ckt.buses.loc['der_h', ['Vpu_A', 'Vpu_B', 'Vpu_C', 'Theta_A', 'Theta_B', 'Theta_C']])
+v_plt_derh.prepare_v3_plot(
+    v_vector=ckt_int.ckt.buses.loc['der_h', ['Vpu_A', 'Vpu_B', 'Vpu_C', 'Theta_A', 'Theta_B', 'Theta_C']])
 v_plt_derh.save_fig('derh1')
 v_plt_derh.show()
-v_plt_derl.prepare_v3_plot(xy=ckt_int.ckt.buses.loc['der_l', ['Vpu_A', 'Vpu_B', 'Vpu_C', 'Theta_A', 'Theta_B', 'Theta_C']], l2l=True)
+v_plt_derl.prepare_v3_plot(
+    v_vector=ckt_int.ckt.buses.loc['der_l', ['Vpu_A', 'Vpu_B', 'Vpu_C', 'Theta_A', 'Theta_B', 'Theta_C']], l2l=True)
 print(der_list[0].der_input)
 v_plt_derl.save_fig('derl1')
 v_plt_derl.show()

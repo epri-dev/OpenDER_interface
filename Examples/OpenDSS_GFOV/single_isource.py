@@ -3,24 +3,31 @@ import os
 import pathlib
 import matplotlib.pyplot as plt
 from opender_interface.opendss_interface import OpenDSSInterface
-from opender_interface.opender_interface import OpenDERInterface
+from opender_interface.der_interface import DERInterface
 from opender import DER, DERCommonFileFormat
 from opender_interface.time_plots import TimePlots
 from opender_interface.xy_plot import XYPlots
 
+'''
+This is an example demonstrating the dynamic behavior of isource experiencing a ground fault over voltage
+'''
 
+## find dss file
 script_path = pathlib.Path(os.path.dirname(__file__))
 circuit_folder = script_path.joinpath("circuit")
 dss_file = circuit_folder.joinpath("single_isource_gfov.dss")
 # load_file = script_path.joinpath("load_profile.xlsx")
 
 # configure the dynamic simulation
-delt = 0.001  # sampling time step (s)
+delt = 0.01  # sampling time step (s)
 
 
 # %%
-# run ckt_int simulation
-ckt_int = OpenDERInterface(dss_file, t_s=delt)
+# initialize circuit
+
+ckt = OpenDSSInterface(str(dss_file))
+ckt_int = DERInterface(ckt, t_s=delt)
+
 ckt_int.initialize(DER_sim_type='isource')
 
 der_file = DERCommonFileFormat(NP_VA_MAX=100000,
@@ -36,7 +43,7 @@ der_file = DERCommonFileFormat(NP_VA_MAX=100000,
 der_list = ckt_int.create_opender_objs(p_pu=1, der_files=der_file)
 
 
-# Initialize
+# steady state power flow (initial)
 ckt_int.der_convergence_process()
 
 # run time series simulation
@@ -58,16 +65,14 @@ while tsim < tend:
     if tsim >= tevt2:
         ckt_int.ckt.cmd('open line.line1')
 
-    ckt_int.run()
 
-    ckt_int.update_der_output_powers()
-    ckt_int.solve_power_flow()
+    ckt_int.der_convergence_process()
 
-    ckt_int.solve_power_flow()
+    # ckt_int.solve_power_flow()
     ckt_int.read_sys_voltage()
     ckt_int.read_line_flow()
 
-    print(tsim, ckt_int.ckt.dss.bus_pu_voltages(), (ckt_int.ckt.lines[['flowS_A', 'flowS_B', 'flowS_C']])) #,'flowS_A', 'flowS_B', 'flowS_C'
+    print(tsim, ckt_int.ckt.dss.bus.pu_voltages, (ckt_int.ckt.lines[['flowS_A', 'flowS_B', 'flowS_C']])) #,'flowS_A', 'flowS_B', 'flowS_C'
     # log result
     plot_obj.add_to_traces(
         {
@@ -91,7 +96,7 @@ while tsim < tend:
     # step tsim
     tsim = tsim + delt
 
-
+# plot simulation result
 plot_obj.prepare()
 plot_obj.axes[0].set_title('Transformer High Side Voltage (pu)')
 plot_obj.axes[0].get_lines()[0].set_color('brown')
@@ -111,10 +116,12 @@ plot_obj.fig.set_size_inches(6, 4)
 plot_obj.fig.tight_layout()
 plot_obj.save('time.svg')
 plot_obj.show()
-v_plt_derh.prepare_v3_plot(xy=ckt_int.ckt.buses.loc['der_h', ['Vpu_A', 'Vpu_B', 'Vpu_C', 'Theta_A', 'Theta_B', 'Theta_C']])
+v_plt_derh.prepare_v3_plot(
+    v_vector=ckt_int.ckt.buses.loc['der_h', ['Vpu_A', 'Vpu_B', 'Vpu_C', 'Theta_A', 'Theta_B', 'Theta_C']])
 v_plt_derh.save_fig('derh1')
 v_plt_derh.show()
-v_plt_derl.prepare_v3_plot(xy=ckt_int.ckt.buses.loc['der_l', ['Vpu_A', 'Vpu_B', 'Vpu_C', 'Theta_A', 'Theta_B', 'Theta_C']], l2l=True)
+v_plt_derl.prepare_v3_plot(
+    v_vector=ckt_int.ckt.buses.loc['der_l', ['Vpu_A', 'Vpu_B', 'Vpu_C', 'Theta_A', 'Theta_B', 'Theta_C']], l2l=True)
 print(ckt_int.der_objs[0].der_input)
 v_plt_derl.save_fig('derl1')
 v_plt_derl.show()
