@@ -6,7 +6,7 @@ OpenDER interface
 Introduction
 ============
 This is the interfaces designed for `OpenDER <https://github.com/epri-dev/opender/>`__ model, aiming to establish
-connections with power system simulators for steady-state or dynamic studies. This package is designed to be used as a
+connections with power system simulators for steady-state or dynamic studies. This package is designed to be used as an
 intermediate solution to analyze impact of IEEE 1547-2018 compliant DER to the distribution circuit.
 Current version offers support for interfacing with OpenDSS.
 
