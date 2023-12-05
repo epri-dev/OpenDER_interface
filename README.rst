@@ -52,11 +52,17 @@ resides. Dependencies will be automatically installed:
 
 Examples
 =========
+Jupyter Notebook examples can be found `here <Examples/Jupyter_notebook_examples/>`__
+
+Other Python scripts are in the Example folder `here <Examples/>`__
+
 * plot_volt-var: demonstrate plotting capabilities
-* OpenDSS_34bus - dynamic simulation: interactions between voltage regulators and DER enter service performance
-* OpenDSS_34bus - steady state simulation: comparison between OpenDSS internal inverter model vs OpenDER
-* OpenDSS_GFOV - single_isource: dynamic simulation of isource experiencing a ground fault over-voltage
-* OpenDSS_GFOV - single_vsource: dynamic simulation of vsource experiencing a ground fault over-voltage
-* OpenDSS_BESS_PV - 15min time series simulation using BESS for PV power peak shaving
+* OpenDSS_34bus/steady_state_simulation: steady-state power flow solution, plotting voltage and power flow profile
+  comparing with and without DERs
+* OpenDSS_34bus/dynamic_simulation: interactions between voltage regulators and DER enter service performance
+* OpenDSS_VR_VV: dynamic simulation demonstrating the impact volt-var settings on system operation
+* OpenDSS_GFOV/single_isource: dynamic simulation of isource experiencing a ground fault over-voltage
+* OpenDSS_GFOV/single_vsource: dynamic simulation of vsource experiencing a ground fault over-voltage
+* OpenDSS_BESS_PV: 15min time series simulation using BESS for PV power peak shaving
 
 
