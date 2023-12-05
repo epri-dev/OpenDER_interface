@@ -43,7 +43,7 @@ der_file = DERCommonFileFormat(NP_VA_MAX=300e3,
                                QV_MODE_ENABLE=True,
 
                                ES_DELAY=300,
-                               ES_RAMP_RATE=30,
+                               ES_RAMP_RATE=300,
                                ES_RANDOMIZED_DELAY=0,)
 
 der_list = ckt_int.create_opender_objs(p_pu=1,der_files=der_file)
@@ -80,11 +80,7 @@ while t < 1200:
     ckt_int.run()
     # Update DER outputs to circuit simulation
     ckt_int.update_der_output_powers()
-    # simulate vr control
-    for vrname in ckt_int.ckt.VRs.keys():
-        Vpri, Ipri = ckt_int.read_vr_v_i(vrname)
-        # run the vr control logic
-        ckt_int.vr_objs[vrname].run(Vpri = Vpri, Ipri = Ipri)
+
     # set the new tap position into opendss
     ckt_int.write_vr()
 
@@ -107,10 +103,10 @@ while t < 1200:
         # result3[f'debug({der.name})'] = der.enterservice.vft_delay.con_del_enable_out
         # result4[f'{der.name}'] = der.enterservice.vft_delay.con_del_enable_int
 
-    for vrname in ckt_int.ckt.VRs.keys():
-        if vrname[-1]=='a':
-            result4[f'Tap ({vrname})'] = ckt_int.vr_objs[vrname].tap
-            result2[f'V ({vrname})'] = ckt_int.vr_objs[vrname].Vreg
+    for vr in ckt_int.vr_objs:
+        if vr.name[-1]=='a':
+            result4[f'Tap ({vr.name})'] = vr.tap
+            result2[f'V ({vr.name})'] = vr.Vreg
 
     plot_obj.add_to_traces(
         {
@@ -122,7 +118,7 @@ while t < 1200:
     )
     t = t + tstep
 print('-------------------------------------------------------------')
-print(f'Total number of tap operations is {sum([ckt_int.vr_objs[vrname].total_sw for vrname in ckt_int.ckt.VRs.keys()])}')
+print(f'Total number of tap operations is {sum([vr.total_sw for vr in ckt_int.vr_objs])}')
 # plot figure
 plot_obj.prepare()
 for ax in plot_obj.axes:

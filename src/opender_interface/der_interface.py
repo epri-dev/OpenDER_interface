@@ -52,7 +52,7 @@ class DERInterface:
         self.der_objs = []
         self.t_s = t_s
         DER.t_s = t_s
-        self.vr_objs = {}
+        self.vr_objs = []
 
         self.__der_objs_temp = []
 
@@ -235,7 +235,8 @@ class DERInterface:
         Create voltage regulator (VR_Model) object based on their definition in the circuit simulation tool
         """
         for fdr_vrname in self.ckt.VRs.keys():
-            self.vr_objs[fdr_vrname] = VR_Model(
+            self.vr_objs.append(VR_Model(
+                name=fdr_vrname,
                 Ts=self.t_s,
                 Td_ctrl=self.ckt.VRs[fdr_vrname]['delay'],
                 Td_tap=self.ckt.VRs[fdr_vrname]['tapdelay'],
@@ -246,7 +247,7 @@ class DERInterface:
                 PT_Ratio=self.ckt.VRs[fdr_vrname]['PT_Ratio'],
                 CT_Primary=self.ckt.VRs[fdr_vrname]['CT_Primary'],
                 tap_ini=0,
-                )
+                ))
 
     def enable_control(self) -> None:
         """
@@ -279,8 +280,8 @@ class DERInterface:
         """
         Write voltage regulator tap information into circuit simulation, refer to specific simulator interface for details
         """
-        for vrname in self.vr_objs.keys():
-            self.ckt.VRs[vrname]['UpdatedTap']=self.vr_objs[vrname].tap
+        for vr in self.vr_objs:
+            self.ckt.VRs[vr.name]['tapPos'] = vr.tap
         self.ckt.write_vr()
 
     def update_vr_tap(self):
@@ -288,8 +289,8 @@ class DERInterface:
         update voltage regulator tap position from circuit into VR model objects. Typically used after establishing
         the initial condition for a dynamic simulation.
         """
-        for vrname in self.vr_objs.keys():
-            self.vr_objs[vrname].tap = float(self.ckt.VRs[vrname]['tapPos'])
+        for vr in self.vr_objs:
+            vr.tap = float(self.ckt.VRs[vr.name]['tapPos'])
 
     def read_vr_v_i(self,vrname) -> Tuple[float, float]:
         """
@@ -319,6 +320,13 @@ class DERInterface:
             der.run()
             if self.print_der:
                 print(der)
+
+        # run voltage regulator logics
+        for vr in self.vr_objs:
+            # read voltage regulator primary voltage
+            Vpri, Ipri = self.read_vr_v_i(vr.name)
+            # Voltage regulator operations
+            vr.run(Vpri=Vpri, Ipri=Ipri)
 
     def __check_q(self):
         """

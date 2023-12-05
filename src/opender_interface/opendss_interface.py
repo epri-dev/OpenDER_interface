@@ -52,7 +52,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
 
         self.dss.text(f"Compile [{self.dss_file}]")
 
-        self._DERs = []
+        self._DERs = None
         self._VRs = {}
         self.DER_sim_type = None
 
@@ -597,7 +597,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
         Write voltage regulator tap information from self._VR into OpenDSS circuit simulation.
         """
         for vrname in self._VRs.keys():
-            self.cmd('edit regcontrol.{} tapNum={}'.format(vrname, self._VRs[vrname]['UpdatedTap']))
+            self.cmd('edit regcontrol.{} tapNum={}'.format(vrname, self._VRs[vrname]['tapPos']))
 
     def read_vr_v_i(self, vrname):
         """

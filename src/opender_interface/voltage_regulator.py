@@ -26,6 +26,7 @@ class VR_Model(object):
     """
 
     def __init__(self,
+                 name,              # Name of the voltage regulator
                  Ts,                # simulation time step (s)
                  Td_ctrl=30,        # delay time for control (s)
                  Td_tap=2,          # delay time for tapping (s)
@@ -42,6 +43,7 @@ class VR_Model(object):
         """
         Initialize the voltage regulator object model
         """
+        self.name = name
         self.Ts = Ts
         self.Td_ctrl = Td_ctrl
         self.Td_tap = Td_tap
