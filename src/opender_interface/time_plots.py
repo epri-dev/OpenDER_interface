@@ -21,6 +21,7 @@ import pandas as pd
 import pickle
 import matplotlib
 import time
+from typing import Union, List, Tuple
 
 
 class TimePlots:
@@ -37,18 +38,14 @@ class TimePlots:
         :param title: Titles of the plots
         :param ylabel: Y-axis labels of the plots
         """
-        self.num_of_inputs = rows*cols
-        self.fig, self.axes = plt.subplots(nrows=rows, ncols=cols, sharex=True)
-
-        if self.num_of_inputs ==1:
-            self.axes=[self.axes]
-        if cols>1:
-            self.axes=self.axes.flatten()
+        self.num_of_subplots = rows * cols
+        self.rows = rows
+        self.cols = cols
 
         self.title = title
         self.ylabel = ylabel
         self.traces = [[]]
-        for i in range(self.num_of_inputs-1):
+        for i in range(self.num_of_subplots - 1):
             self.traces.append([])
 
     def add_to_traces(self, *args):
@@ -75,12 +72,20 @@ class TimePlots:
         """
         Prepare the time plot
         """
-        for i in range(self.num_of_inputs):
+        self.fig, self.axes = plt.subplots(nrows=self.rows, ncols=self.cols, sharex=True)
+
+        if self.num_of_subplots ==1:
+            self.axes=[self.axes]
+        if self.cols>1:
+            self.axes=self.axes.flatten()
+
+        for i in range(self.num_of_subplots):
             self.traces[i]=pd.DataFrame(self.traces[i])
 
-        for i in range(self.num_of_inputs):
+        for i in range(self.num_of_subplots):
             for j,trace in enumerate(self.traces[i]):
-                self.axes[i].plot(np.array(range(len(self.traces[i][trace])))*opender.der.DER.t_s,self.traces[i][trace],label=trace)
+                self.axes[i].plot(np.array(range(len(self.traces[i][trace])))*opender.der.DER.t_s, self.traces[i][trace], label=trace)
+
             try:
                 self.axes[i].set_title(self.title[i])
             except:
@@ -90,6 +95,7 @@ class TimePlots:
                 self.axes[i].set_ylabel(self.ylabel[i])
             except:
                 pass
+
             self.axes[i].grid()
 
             self.axes[i].legend(loc=2)
@@ -122,14 +128,22 @@ class TimePlots:
         Prepare animation.
         """
         print('preparing animations')
+
+        self.fig, self.axes = plt.subplots(nrows=self.rows, ncols=self.cols, sharex=True)
+
+        if self.num_of_subplots ==1:
+            self.axes=[self.axes]
+        if self.cols>1:
+            self.axes=self.axes.flatten()
+
         from matplotlib.animation import FuncAnimation
         matplotlib.rcParams['animation.ffmpeg_path'] = r'C:\Users\pyma001\Box\_Documents\ffmpeg.exe' # Please install ffmpeg and reference it here.
 
-        for i in range(self.num_of_inputs):
+        for i in range(self.num_of_subplots):
             self.traces[i] = pd.DataFrame(self.traces[i])
 
         self.lines = [[]]
-        for i in range(self.num_of_inputs):
+        for i in range(self.num_of_subplots):
             self.lines.append([])
             for j, trace in enumerate(self.traces[i]):
                 self.lines[i].append(self.axes[i].plot([],[], label=trace)[0])
@@ -171,7 +185,7 @@ class TimePlots:
         """
         Animation function to be executed every animation frame
         """
-        for i in range(self.num_of_inputs):
+        for i in range(self.num_of_subplots):
             for j, trace in enumerate(self.traces[i]):
                 x=np.array(range(len(self.traces[i][trace])))[0:ii] * opender.der.DER.t_s
                 y=self.traces[i][trace].values[0:ii]
@@ -193,4 +207,27 @@ class TimePlots:
         print(f"... Completed in {time.perf_counter()-start:.1f}s")
 
 
+class CombinedTimePlots(TimePlots):
+    """
+    This class is used to create a time-series figure to contain multiple simulation results.
+    """
+    def __init__(self, rows: int, cols: int = 1, title: list = None, ylabel: list = None):
+        """
+        :param rows: Rows of the plots
+        :param cols: Columns of the plots
+        :param title: Titles of the plots
+        :param ylabel: Y-axis labels of the plots
+        """
+        super().__init__(rows, cols, title, ylabel)
 
+    def combine_time_plots(self, tplot_list: List[TimePlots]):
+        """
+        :param tplot_list: List of TimePlots objects
+        """
+
+        for tplot in tplot_list:
+            for i in range(self.num_of_subplots):
+                tplot.traces[i] = pd.DataFrame(tplot.traces[i])
+
+        for i in range(self.num_of_subplots):
+            self.traces[i] = pd.concat([tplot.traces[i] for tplot in tplot_list], axis=1)

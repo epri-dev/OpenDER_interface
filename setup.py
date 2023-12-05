@@ -25,7 +25,7 @@ def read(*names, **kwargs):
 
 setup(
     name='opender_interface',
-    version='1.0.0',
+    version='1.0.1',
     license='BSD',
     description='This is the modeling interface to utilize the open source DER (OpenDER) model for circuit level '
                 'steady-state and dynamic simulations.',
