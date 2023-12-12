@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import pathlib
-from opender_interface.der_interface import DERInterface
+from opender_interface import DERInterface
 from opender import DER, DERCommonFileFormat
 from opender_interface.time_plots import TimePlots, CombinedTimePlots
 
@@ -17,17 +17,18 @@ circuit_folder = script_path
 dss_file = circuit_folder.joinpath("circuit_vr.dss")
 
 # configure the dynamic simulation
-delt = 1  # sampling time step (s)
+delt = 0.2  # sampling time step (s)
 
 # configure distribution circuit line parameters
 vbase = 12.47
 sbase = 5
 zbase = vbase ** 2 / sbase
 
-xor1 = 3
-xor2 = 1.5
-zpu1 = 0.1
-zpu2 = 0.2
+xor1 = 5
+xor2 = 1
+zpu1 = 0.2
+zpu2 = 0.03
+tap_pos = -1
 
 rpu1 = zpu1 / np.sqrt(1 + xor1 ** 2)
 xpu1 = rpu1 * xor1
@@ -46,15 +47,15 @@ ckt_int_list = [DERInterface(dss_file, t_s=delt) for i in range(3)]
 derfiles = [DERCommonFileFormat(NP_P_MAX=5e6, NP_VA_MAX=5e6, NP_Q_MAX_INJ=5e6, NP_Q_MAX_ABS=5e6, QV_MODE_ENABLE=True)
             for i in range(3)]
 
-derfiles[1].QV_CURVE_V1 = 0.96
 derfiles[1].QV_CURVE_V2 = 1
 derfiles[1].QV_CURVE_V3 = 1
-derfiles[1].QV_CURVE_V4 = 1.04
+derfiles[1].QV_CURVE_V1 = 0.98
+derfiles[1].QV_CURVE_V4 = 1.02
 
-derfiles[2].QV_CURVE_V1 = 0.96
 derfiles[2].QV_CURVE_V2 = 1
 derfiles[2].QV_CURVE_V3 = 1
-derfiles[2].QV_CURVE_V4 = 1.04
+derfiles[2].QV_CURVE_V1 = 0.98
+derfiles[2].QV_CURVE_V4 = 1.02
 derfiles[2].QV_VREF_AUTO_MODE = True
 
 DER.t_s=delt
@@ -88,7 +89,7 @@ for i, ckt_int in enumerate(ckt_int_list):
     ckt_int.create_vr_objs()
 
     # set tap position to 0 for all three simulation cases, so they have the same initial condition.
-    ckt_int.vr_objs[0].tap = 0
+    ckt_int.vr_objs[0].tap = tap_pos
     ckt_int.write_vr()
 
     # disable voltage regulator controls in OpenDSS internal solver
@@ -101,11 +102,11 @@ for i, ckt_int in enumerate(ckt_int_list):
     plot_obj = TimePlots(4, 1)
     plot_list.append(plot_obj)
 
-    # run time series simulation for 400s
-    for t in range(int(500/delt)):
+    # run time series simulation for 800s
+    for t in range(int(800/delt)):
 
         # Power ramp from 0 to 1 in 30s
-        if t > 20:
+        if t > 100/delt:
             P_gen = min(1.0, P_gen+1/30*delt)
 
         ckt_int.update_der_p_pu([P_gen])
@@ -147,5 +148,4 @@ for ax in combined.axes:
     ax.legend(fontsize='x-small')
     ax.grid()
 combined.fig.tight_layout()
-# combined.save('1.svg')
 combined.show()
