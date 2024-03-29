@@ -316,7 +316,7 @@ class DERInterface:
         v_der_list, theta_der_list = self.read_der_voltage()
         for der, V, theta in zip(der_objs, v_der_list, theta_der_list):
             # Update the voltages to OpenDER objects, and Compute DER output power
-            der.update_der_input(v_pu=V, theta=theta)
+            der.update_der_input(v_pu=list(V), theta=list(theta))
             der.run()
             if self.print_der:
                 print(der)

@@ -155,4 +155,5 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-/Examples/OpenDSS_DVS/
+/Examples/testing/
+.idea/
