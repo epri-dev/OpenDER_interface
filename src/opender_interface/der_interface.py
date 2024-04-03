@@ -57,7 +57,7 @@ class DERInterface:
         self.__der_objs_temp = []
 
         # P and Q steps for each convergence iteration
-        self.__delta_q = 0.5
+        self.__delta_q = 0.2
         self.__delta_p = 0.5
         self.__numberofders = 0
         self.__der_files = []
@@ -319,7 +319,7 @@ class DERInterface:
             der.update_der_input(v_pu=list(V), theta=list(theta))
             der.run()
             if self.print_der:
-                print(der)
+                print(der, list(theta)[0], der.der_input.freq_hz)
 
         # run voltage regulator logics
         for vr in self.vr_objs:

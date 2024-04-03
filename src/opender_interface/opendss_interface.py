@@ -39,7 +39,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
         """
         return self._VRs
 
-    def __init__(self, dss_file: str) -> None:
+    def __init__(self, dss_file: str = None) -> None:
         """
         To create an "OpenDSSInterface" object
 
@@ -50,7 +50,8 @@ class OpenDSSInterface(DxToolInterfacesABC):
         self.dss = py_dss_interface.DSS()
         self.der_bus_list = []
 
-        self.dss.text(f"Compile [{self.dss_file}]")
+        if dss_file is not None:
+            self.dss.text(f"Compile [{self.dss_file}]")
 
         self._DERs = None
         self._VRs = {}
@@ -155,8 +156,8 @@ class OpenDSSInterface(DxToolInterfacesABC):
         lines = []
         for linename in linenames:
             self.dss.lines.name = linename
-            bus1 = self.dss.lines.bus1.split('.')[0]
-            bus2 = self.dss.lines.bus2.split('.')[0]
+            bus1 = self.dss.lines.bus1#.split('.')[0]
+            bus2 = self.dss.lines.bus2#.split('.')[0]
             self.dss.circuit.set_active_bus(bus1)
             lines.append({
                 'name': linename,
@@ -200,7 +201,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
             loads.append({
                 'name': loadname,
                 'type': this_type,
-                'bus': bus.split('.')[0].replace(' ', ''),
+                'bus': bus, #.split('.')[0].replace(' ', ''),
                 'nodes': bus,
                 'phases': phases,
                 'kw': kw,
@@ -230,13 +231,13 @@ class OpenDSSInterface(DxToolInterfacesABC):
             gens.append({
                 'name': genname,
                 'type': this_type,
-                'bus': bus.split('.')[0].replace(' ', ''),
+                'bus': bus, #bus.split('.')[0].replace(' ', ''),
                 'kw': kw,
                 'kvar': kvar,
                 'kVA': kVA,
                 'kV': kV,
             })
-            self.gen_bus_list.append(bus.split('.')[0].replace(' ', ''))
+            self.gen_bus_list.append(bus)
 
         self.generators = pd.DataFrame(gens)
 
@@ -260,14 +261,14 @@ class OpenDSSInterface(DxToolInterfacesABC):
             PVs.append({
                 'name': PVname,
                 'type': this_type,
-                'bus': bus.split('.')[0].replace(' ', ''),
+                'bus': bus, #.split('.')[0].replace(' ', ''),
                 'kw': kw,
                 'kvar': kvar,
                 'kvarabs': kvarabs,
                 'kVA': kVA,
                 'kV': kV
             })
-            self.der_bus_list.append(bus.split('.')[0].replace(' ', ''))
+            self.der_bus_list.append(bus)
 
         self._DERs = pd.DataFrame(PVs)
 
@@ -289,14 +290,14 @@ class OpenDSSInterface(DxToolInterfacesABC):
             PVs.append({
                 'name': PVname,
                 'type': this_type,
-                'bus': bus.split('.')[0].replace(' ', ''),
-                'kw': 100,
-                'kvar': 44,
-                'kvarabs': 44,
-                'kVA': 100,
+                'bus': bus, #.split('.')[0].replace(' ', ''),
+                'kw': None,
+                'kvar': None,
+                'kvarabs': None,
+                'kVA': None,
                 'kV': kV
             })
-            self.der_bus_list.append(bus.split('.')[0].replace(' ', ''))
+            self.der_bus_list.append(bus)
 
         self._DERs = pd.DataFrame(PVs)
 
@@ -320,14 +321,14 @@ class OpenDSSInterface(DxToolInterfacesABC):
             PVs.append({
                 'name': PVname,
                 'type': this_type,
-                'bus': bus.split('.')[0].replace(' ', ''),
+                'bus': bus, #.split('.')[0].replace(' ', ''),
                 'kw': kw,
                 'kvar': kw,
                 'kvarabs': kw,
                 'kVA': kVA,
                 'kV': kV
             })
-            self.der_bus_list.append(bus.split('.')[0].replace(' ', ''))
+            self.der_bus_list.append(bus)
 
         self._DERs = pd.DataFrame(PVs)
 
@@ -424,6 +425,19 @@ class OpenDSSInterface(DxToolInterfacesABC):
                 self.cmd(f'{self.DER_sim_type}.{name}.kvar={Q_gen}')
 
             if self.DER_sim_type == 'isource':
+                self.dss.circuit.set_active_element(f'isource.{name}_a')
+                i_a = self.dss.cktelement.currents
+                self.dss.circuit.set_active_element(f'isource.{name}_b')
+                i_b = self.dss.cktelement.currents
+                self.dss.circuit.set_active_element(f'isource.{name}_c')
+                i_c = self.dss.cktelement.currents
+                i = [i_a[2] + 1j * i_a[3],
+                     i_b[2] + 1j * i_b[3],
+                     i_c[2] + 1j * i_c[3]]
+                i_der = der_obj.get_der_output('I_A')
+                print([i_der[0][0]*np.exp(1j*(i_der[1][0]))])
+                print(i)
+
                 (ia, ib, ic), (theta_a, theta_b, theta_c) = der_obj.get_der_output(output='I_A')
 
                 self.cmd(f'{self.DER_sim_type}.{name}_a.amps={ia}')
@@ -434,7 +448,20 @@ class OpenDSSInterface(DxToolInterfacesABC):
                 self.cmd(f'{self.DER_sim_type}.{name}_c.angle={theta_c * 57.29577951308232}')
 
             if self.DER_sim_type == 'vsource':
-                (va, vb, vc), (theta_a, theta_b, theta_c) = der_obj.get_der_output(output='V_pu')
+                self.dss.circuit.set_active_element(f'vsource.{name}_a')
+                i_a = self.dss.cktelement.currents
+                self.dss.circuit.set_active_element(f'vsource.{name}_b')
+                i_b = self.dss.cktelement.currents
+                self.dss.circuit.set_active_element(f'vsource.{name}_c')
+                i_c = self.dss.cktelement.currents
+                i = [i_a[2] + 1j * i_a[3],
+                     i_b[2] + 1j * i_b[3],
+                     i_c[2] + 1j * i_c[3]]
+                i_der = der_obj.get_der_output('I_A')
+                print([i_der[0][0]*np.exp(1j*(i_der[1][0]))])
+                print(i)
+
+                (va, vb, vc), (theta_a, theta_b, theta_c) = der_obj.get_der_output(output='V_pu_regc')
 
                 self.cmd(f'{self.DER_sim_type}.{name}_a.pu={va * 0.577350}')
                 self.cmd(f'{self.DER_sim_type}.{name}_b.pu={vb * 0.577350}')
@@ -483,7 +510,10 @@ class OpenDSSInterface(DxToolInterfacesABC):
         """
         if der_bus_list is None:
             der_bus_list = self.der_bus_list
-        return [self.buses.loc[der_bus, ['Vpu_A', 'Vpu_B', 'Vpu_C']] for der_bus in der_bus_list]
+
+        return [self.buses.loc[der_bus.split('.')[0],
+                               ['Vpu_'+chr(int(phase) + 64) for phase in der_bus_list[0].split('.')[1:]]]
+                for der_bus in der_bus_list]
 
     def read_der_voltage_angle(self, der_bus_list=None) -> list:
         """
@@ -494,7 +524,9 @@ class OpenDSSInterface(DxToolInterfacesABC):
         """
         if der_bus_list is None:
             der_bus_list = self.der_bus_list
-        return [self.buses.loc[der_bus, ['Theta_A', 'Theta_B', 'Theta_C']] for der_bus in der_bus_list]
+        return [self.buses.loc[der_bus.split('.')[0],
+                               ['Theta_' + chr(int(phase) + 64) for phase in der_bus_list[0].split('.')[1:]]]
+                for der_bus in der_bus_list]
 
     def read_line_flow(self) -> pd.DataFrame:
         """
