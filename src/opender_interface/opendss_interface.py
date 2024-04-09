@@ -278,19 +278,27 @@ class OpenDSSInterface(DxToolInterfacesABC):
         """
         PVnames = list(self.dss.isources.names)
         PVs = []
-        PVnames = [PVname.split('_')[0].replace(' ', '') for PVname in PVnames]
-        PVnames = [*set(PVnames)]
+        # PVnames = [PVname.split('_')[0].replace(' ', '') for PVname in PVnames]
+        PVnames = self.__combine_elements(PVnames)
+
         for PVname in PVnames:
-            self.dss.isources.name = f'{PVname}_a'
-            bus = self.dss.text(f'? isource.{PVname}_a.bus1')
-            self.dss.circuit.set_active_bus(bus)
-            kV = self.dss.bus.kv_base * 1.7320508075688
+            if '_a' in PVname or '_b' in PVname or '_c' in PVname:
+                self.dss.isources.name = f'{PVname}'
+                bus = self.dss.text(f'? isource.{PVname}.bus1')
+                self.dss.circuit.set_active_bus(bus)
+                kV = self.dss.bus.kv_base * 1.7320508075688
+            else:
+                self.dss.isources.name = f'{PVname}_a'
+                bus = self.dss.text(f'? isource.{PVname}_a.bus1')
+                self.dss.circuit.set_active_bus(bus)
+                kV = self.dss.bus.kv_base * 1.7320508075688
+                bus = bus.split('.')[0].replace(' ', '')+'.1.2.3'
 
             this_type = 'isource'
             PVs.append({
                 'name': PVname,
                 'type': this_type,
-                'bus': bus, #.split('.')[0].replace(' ', ''),
+                'bus': bus,
                 'kw': None,
                 'kvar': None,
                 'kvarabs': None,
@@ -298,6 +306,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
                 'kV': kV
             })
             self.der_bus_list.append(bus)
+
 
         self._DERs = pd.DataFrame(PVs)
 
@@ -307,21 +316,32 @@ class OpenDSSInterface(DxToolInterfacesABC):
         """
         PVnames = list(self.dss.vsources.names)[1:]  # First one is substation
         PVs = []
-        PVnames = [PVname.split('_')[0].replace(' ', '') for PVname in PVnames]
-        PVnames = [*set(PVnames)]
+        # PVnames = [PVname.split('_')[0].replace(' ', '') for PVname in PVnames]
+        PVnames = self.__combine_elements(PVnames)
+
         for PVname in PVnames:
-            self.dss.vsources.name = f'{PVname}_a'
-            kw = float(self.dss.text(f'? vsource.{PVname}_a.baseMVA')) * 1000
-            kVA = float(self.dss.text(f'? vsource.{PVname}_a.baseMVA')) * 1000
-            bus = self.dss.text(f'? vsource.{PVname}_a.bus1')
-            self.dss.circuit.set_active_bus(bus)
-            kV = self.dss.bus.kv_base * 1.7320508075688
+            if '_a' in PVname or '_b' in PVname or '_c' in PVname:
+                self.dss.vsources.name = f'{PVname}'
+                bus = self.dss.text(f'? vsource.{PVname}.bus1')
+                self.dss.circuit.set_active_bus(bus)
+                kV = self.dss.bus.kv_base * 1.7320508075688
+                kw = float(self.dss.text(f'? vsource.{PVname}.baseMVA')) * 1000
+                kVA = float(self.dss.text(f'? vsource.{PVname}.baseMVA')) * 1000
+            else:
+                self.dss.vsources.name = f'{PVname}_a'
+                bus = self.dss.text(f'? vsource.{PVname}_a.bus1')
+                self.dss.circuit.set_active_bus(bus)
+                kV = self.dss.bus.kv_base * 1.7320508075688
+                kw = float(self.dss.text(f'? vsource.{PVname}_a.baseMVA')) * 1000
+                kVA = float(self.dss.text(f'? vsource.{PVname}_a.baseMVA')) * 1000
+                bus = bus.split('.')[0].replace(' ', '')+'.1.2.3'
+
 
             this_type = 'vsource'
             PVs.append({
                 'name': PVname,
                 'type': this_type,
-                'bus': bus, #.split('.')[0].replace(' ', ''),
+                'bus': bus,
                 'kw': kw,
                 'kvar': kw,
                 'kvarabs': kw,
@@ -461,7 +481,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
                 print([i_der[0][0]*np.exp(1j*(i_der[1][0]))])
                 print(i)
 
-                (va, vb, vc), (theta_a, theta_b, theta_c) = der_obj.get_der_output(output='V_pu_regc')
+                (va, vb, vc), (theta_a, theta_b, theta_c) = der_obj.get_der_output(output='V_pu')
 
                 self.cmd(f'{self.DER_sim_type}.{name}_a.pu={va * 0.577350}')
                 self.cmd(f'{self.DER_sim_type}.{name}_b.pu={vb * 0.577350}')
@@ -650,3 +670,26 @@ class OpenDSSInterface(DxToolInterfacesABC):
         else:
             Ipri = [-icplx[2 * ii + 1] for ii in range(int(len(icplx) / 2))]
         return Vpri, Ipri
+
+    def __combine_elements(self, lst):
+        combined_list = []
+        prefixes = set()
+
+        # Extract unique prefixes
+        for item in lst:
+            prefix = item.split('_')[0]
+            prefixes.add(prefix)
+
+        # Iterate over unique prefixes
+        for prefix in prefixes:
+            sub_elements = [elem for elem in lst if elem.startswith(prefix)]
+
+            # Check if all sub-elements exist
+            all_exist = all(elem in sub_elements for elem in [prefix + suffix for suffix in ['_a', '_b', '_c']])
+            if all_exist:
+                combined_item = prefix
+                combined_list.append(combined_item)
+            else:
+                combined_list.extend(sub_elements)
+
+        return combined_list
