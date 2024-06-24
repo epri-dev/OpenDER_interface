@@ -28,10 +28,10 @@ def plot_voltage_profile(ax, data_label, data_color):
 
     # Lines
     for _, line in ckt_int.ckt.lines.iterrows():
-        ax.plot([ckt_int.ckt.buses['distance'].loc[str(line['bus1'])],
-                 ckt_int.ckt.buses['distance'].loc[str(line['bus2'])]],
-                [ckt_int.ckt.buses[data_label].loc[str(line['bus1'])],
-                 ckt_int.ckt.buses[data_label].loc[str(line['bus2'])]], color=data_color)
+        ax.plot([ckt_int.ckt.buses['distance'].loc[str(line['bus1']).split('.')[0]],
+                 ckt_int.ckt.buses['distance'].loc[str(line['bus2']).split('.')[0]]],
+                [ckt_int.ckt.buses[data_label].loc[str(line['bus1']).split('.')[0]],
+                 ckt_int.ckt.buses[data_label].loc[str(line['bus2']).split('.')[0]]], color=data_color)
 
     # Transformers
     ax.plot([ckt_int.ckt.buses['distance'].loc['814'],
@@ -58,7 +58,7 @@ def plot_power_profile(ax, data_label, data_color):
     for index, line in ckt_int.ckt.lines.iterrows():
 
         if abs(line.loc[data_label].real)>0.1:
-            ax.scatter((ckt_int.ckt.buses['distance'].loc[str(line['bus1'])]+ckt_int.ckt.buses['distance'].loc[str(line['bus2'])])/2,
+            ax.scatter((ckt_int.ckt.buses['distance'].loc[str(line['bus1'].split('.')[0])]+ckt_int.ckt.buses['distance'].loc[str(line['bus2']).split('.')[0]])/2,
                        line.loc[data_label].real, color=data_color)
 
             for j in range(i,len(ckt_int.ckt.lines)):
@@ -66,8 +66,8 @@ def plot_power_profile(ax, data_label, data_color):
                 if abs(line2.loc[data_label].real) > 0.1:
                     if line['bus1'] == line2['bus2'] or line['bus2'] == line2['bus1'] or\
                        (i==7 and j==8) or (i==39 and j==40) or (i==39 and j==50):
-                        ax.plot([(ckt_int.ckt.buses['distance'].loc[str(line['bus1'])] + ckt_int.ckt.buses['distance'].loc[str(line['bus2'])]) / 2,
-                                 (ckt_int.ckt.buses['distance'].loc[str(line2['bus1'])] + ckt_int.ckt.buses['distance'].loc[str(line2['bus2'])]) / 2],
+                        ax.plot([(ckt_int.ckt.buses['distance'].loc[str(line['bus1'].split('.')[0])] + ckt_int.ckt.buses['distance'].loc[str(line['bus2']).split('.')[0]]) / 2,
+                                 (ckt_int.ckt.buses['distance'].loc[str(line2['bus1'].split('.')[0])] + ckt_int.ckt.buses['distance'].loc[str(line2['bus2']).split('.')[0]]) / 2],
                                 [line.loc[data_label].real, line2.loc[data_label].real],color=data_color)
         i=i+1
 

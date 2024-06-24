@@ -271,10 +271,10 @@ class XYPlots:
         self.meas_points = pd.DataFrame(self.meas_points_dict)
 
         for der_obj in self.plot_points:
-            self.ax_pq.scatter(self.__calc_Q(der_obj.p_out_pu),self.__calc_Q(der_obj.q_out_pu), s=60, marker='^', color='blue')
+            self.ax_pq.scatter(self.__calc_Q(der_obj.p_out_pu),self.__calc_Q(der_obj.q_out_pu), s=90, marker='^', color='blue')
         for i, point in self.meas_points.iterrows():
             self.ax_pq.scatter(self.__calc_Q(self.meas_points['P'].values[i]), self.__calc_Q(self.meas_points['Q'].values[i]),
-                               marker='v', s=60, color='purple')
+                               marker='v', s=90, color='orange')
 
         # Draw constant power factor line
         if self.der_obj.der_file.CONST_PF_MODE_ENABLE:
@@ -347,7 +347,7 @@ class XYPlots:
         self.ax_vq.plot(v_curve, q_curve, color='red', label='Volt-Var Curve')
 
         for der_obj in self.plot_points:
-            self.ax_vq.scatter(der_obj.der_input.v_meas_pu, self.__calc_Q(der_obj.q_out_pu), marker='^', s=60, color='blue')
+            self.ax_vq.scatter(der_obj.der_input.v_meas_pu, self.__calc_Q(der_obj.q_out_pu), marker='^', s=90, color='blue')
 
         if self.meas_points_dict != []:
             self.meas_points = pd.DataFrame(self.meas_points_dict)
@@ -356,7 +356,7 @@ class XYPlots:
 
         for i, point in self.meas_points.iterrows():
             self.ax_vq.scatter(self.meas_points['V'].values[i], self.__calc_Q(self.meas_points['Q'].values[i]),
-                               marker='v', s=60, color='purple')
+                               marker='v', s=90, color='orange')
 
         if self.pu:
             self.set_title_labels(self.ax_vq, 'Volt-var', "Voltage (pu)", "Reactive Power (pu)")
@@ -386,10 +386,10 @@ class XYPlots:
             self.meas_points = pd.DataFrame()
 
         for der_obj in self.plot_points:
-            self.ax_vp.scatter(der_obj.der_input.v_meas_pu, self.__calc_Q(der_obj.p_out_pu), marker='^', s=60, color='blue')
+            self.ax_vp.scatter(der_obj.der_input.v_meas_pu, self.__calc_Q(der_obj.p_out_pu), marker='^', s=90, color='blue')
         for i, point in self.meas_points.iterrows():
             self.ax_vp.scatter(self.meas_points['V'].values[i], self.__calc_Q(self.meas_points['P'].values[i]),
-                               marker='v', s=60, color='purple')
+                               marker='v', s=90, color='orange')
 
         if self.der_obj.der_file.AP_LIMIT_ENABLE:
             p = self.__calc_P(self.der_obj.der_file.AP_LIMIT)
@@ -527,7 +527,7 @@ class XYPlots:
 
         # Plot OpenDER outputs
         for der_obj in self.plot_points:
-            self.ax_fp.scatter(der_obj.der_input.freq_hz, self.__calc_Q(der_obj.p_out_pu), marker='^', s=60, color='blue')
+            self.ax_fp.scatter(der_obj.der_input.freq_hz, self.__calc_Q(der_obj.p_out_pu), marker='^', s=90, color='blue')
 
         # Plot measured points
         if self.meas_points_dict != []:
@@ -537,7 +537,7 @@ class XYPlots:
 
         for i, point in self.meas_points.iterrows():
             self.ax_fp.scatter(self.meas_points['F'].values[i], self.__calc_Q(self.meas_points['P'].values[i]),
-                               marker='v', s=60, color='purple')
+                               marker='v', s=90, color='purple')
 
         self.ax_fp.legend(loc=1)
         # self.ax_fp.set_ylim(0, 1.05)
@@ -556,7 +556,7 @@ class XYPlots:
     #
     #     matplotlib.rcParams['animation.ffmpeg_path'] = r'C:\xxxxxxxx\ffmpeg.exe' # Please install ffmpeg and reference it here.
     #
-    #     self.point = self.ax_pq.scatter(0, 0, s=60, color='blue')
+    #     self.point = self.ax_pq.scatter(0, 0, s=90, color='blue')
     #     self.point_hollow = self.ax_pq.scatter(0, 0, s=80, facecolors='none', edgecolors='green')
     #
     #     self.ani = FuncAnimation(self.fig_pq, self.animate, interval=100, blit=True,
@@ -568,7 +568,7 @@ class XYPlots:
     #     if i>=len(self.plot_points):
     #         i=len(self.plot_points)-1
     #
-    #     self.point = self.ax_pq.scatter(self.plot_points[i].p_out_kw, self.plot_points[i].q_out_kvar, s=60, color='blue')
+    #     self.point = self.ax_pq.scatter(self.plot_points[i].p_out_kw, self.plot_points[i].q_out_kvar, s=90, color='blue')
     #
     #     self.point_hollow.remove()
     #     self.point_hollow = self.ax_pq.scatter(self.__calc_P(self.plot_points[i].p_desired_pu),

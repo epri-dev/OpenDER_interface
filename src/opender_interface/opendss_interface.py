@@ -188,7 +188,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
         """
 
         loadnames = self.dss.loads.names
-        if loadnames[0] == 'NONE':
+        if loadnames[0].upper() == 'NONE':
             loadnames = []
         loads = []
         for loadname in loadnames:
@@ -216,7 +216,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
         Read the information of all the generators into this class, stored in self.generators
         """
         gennames = list(self.dss.generators.names)
-        if gennames[0] == 'NONE':
+        if gennames[0].upper() == 'NONE':
             gennames = []
         self.gen_bus_list = []
         gens = []
@@ -246,7 +246,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
         Read the information of all the PVSystems into this class, stored in self.DERs
         """
         PVnames = list(self.dss.pvsystems.names)
-        if PVnames[0] == 'NONE':
+        if PVnames[0].upper() == 'NONE':
             PVnames = []
         PVs = []
         for PVname in PVnames:
@@ -591,7 +591,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
         """
         # self.vrStates = []
         VR_names = list(self.dss.regcontrols.names)
-        if VR_names[0] == 'NONE':
+        if VR_names[0].upper() == 'NONE':
             VR_names = []
         # RegulatorByPhase type
         for vr_name in VR_names:
