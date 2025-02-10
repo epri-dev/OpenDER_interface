@@ -318,8 +318,8 @@ class DERInterface:
             # Update the voltages to OpenDER objects, and Compute DER output power
             der.update_der_input(v_pu=list(V), theta=list(theta))
             der.run()
-            if self.print_der:
-                print(der, list(theta)[0], der.der_input.freq_hz)
+            # if self.print_der:
+                # print(der, list(theta)[0], der.der_input.freq_hz)
 
         # run voltage regulator logics
         for vr in self.vr_objs:
@@ -457,7 +457,7 @@ class DERInterface:
         i = 0
         self.__initialize_convergence()
 
-        while not self.__converged and i < 100:
+        while not self.__converged and i < 300:
             # Copy temporary OpenDER objects so any calculation does not impact their time responses.
             self.__der_objs_temp = deepcopy(self.der_objs)
 

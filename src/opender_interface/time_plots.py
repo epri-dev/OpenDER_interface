@@ -220,14 +220,21 @@ class CombinedTimePlots(TimePlots):
         """
         super().__init__(rows, cols, title, ylabel)
 
-    def combine_time_plots(self, tplot_list: List[TimePlots]):
+    def combine_time_plots(self, tplot_list: List[TimePlots] = None, traces_list: List[pd.DataFrame] = None):
         """
         :param tplot_list: List of TimePlots objects
         """
+        if tplot_list is not None:
+            for tplot in tplot_list:
+                for i in range(self.num_of_subplots):
+                    tplot.traces[i] = pd.DataFrame(tplot.traces[i])
 
-        for tplot in tplot_list:
             for i in range(self.num_of_subplots):
-                tplot.traces[i] = pd.DataFrame(tplot.traces[i])
+                self.traces[i] = pd.concat([tplot.traces[i] for tplot in tplot_list], axis=1)
 
-        for i in range(self.num_of_subplots):
-            self.traces[i] = pd.concat([tplot.traces[i] for tplot in tplot_list], axis=1)
+        if traces_list is not None:
+            # for i in range(self.num_of_subplots):
+            #     self.traces[i] = traces_list[i]
+
+            for i in range(self.num_of_subplots):
+                self.traces[i] = pd.concat([traces[i] for traces in traces_list], axis=1)

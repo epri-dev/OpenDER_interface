@@ -84,6 +84,8 @@ class OpenDSSInterface(DxToolInterfacesABC):
             raise ValueError(
                 f"DER_sim_type should be 'pvsystem', 'generator', 'isource', 'vsource'. Now it is {DER_sim_type}")
 
+        self.dss.text('calcv')
+
         self.__init_buses()
         self.__init_lines()
         self.__init_loads()
@@ -454,9 +456,9 @@ class OpenDSSInterface(DxToolInterfacesABC):
                 i = [i_a[2] + 1j * i_a[3],
                      i_b[2] + 1j * i_b[3],
                      i_c[2] + 1j * i_c[3]]
-                i_der = der_obj.get_der_output('I_A')
-                print([i_der[0][0]*np.exp(1j*(i_der[1][0]))])
-                print(i)
+                # i_der = der_obj.get_der_output('I_A')
+                # print([i_der[0][0]*np.exp(1j*(i_der[1][0]))])
+                # print(i)
 
                 (ia, ib, ic), (theta_a, theta_b, theta_c) = der_obj.get_der_output(output='I_A')
 
@@ -532,7 +534,7 @@ class OpenDSSInterface(DxToolInterfacesABC):
             der_bus_list = self.der_bus_list
 
         return [self.buses.loc[der_bus.split('.')[0],
-                               ['Vpu_'+chr(int(phase) + 64) for phase in der_bus_list[0].split('.')[1:]]]
+                               ['Vpu_'+chr(int(phase) + 64) for phase in der_bus.split('.')[1:]]]
                 for der_bus in der_bus_list]
 
     def read_der_voltage_angle(self, der_bus_list=None) -> list:
@@ -558,25 +560,26 @@ class OpenDSSInterface(DxToolInterfacesABC):
         linenames = self.lines.index
         for linename in linenames:
             self.dss.circuit.set_active_element('line.{}'.format(linename))
-            ii = 0
-            phases_num = self.dss.cktelement.bus_names[0].split('.')[1:]
-            phases = [chr(int(i) + 64) for i in phases_num]
-            if phases == []:
-                phases = ['A', 'B', 'C']
+            if self.cmd(f'? line.{linename}.enabled').upper() == 'TRUE':
+                ii = 0
+                phases_num = self.dss.cktelement.bus_names[0].split('.')[1:]
+                phases = [chr(int(i) + 64) for i in phases_num]
+                if phases == []:
+                    phases = ['A', 'B', 'C']
 
-            for phase in phases:
-                if ('_' + phase.lower() in linename) or ('_' + phase in linename) or (
-                        not (('_a' in linename) or ('_b' in linename) or ('_c' in linename))):
-                    v = self.dss.cktelement.voltages[2 * ii] + 1j * self.dss.cktelement.voltages[2 * ii + 1]
-                    s = self.dss.cktelement.powers[2 * ii] + 1j * self.dss.cktelement.powers[2 * ii + 1]
+                for phase in phases:
+                    if ('_' + phase.lower() in linename) or ('_' + phase in linename) or (
+                            not (('_a' in linename) or ('_b' in linename) or ('_c' in linename))):
+                        v = self.dss.cktelement.voltages[2 * ii] + 1j * self.dss.cktelement.voltages[2 * ii + 1]
+                        s = self.dss.cktelement.powers[2 * ii] + 1j * self.dss.cktelement.powers[2 * ii + 1]
 
-                    # complex current in amps (bus1 --> bus2)
-                    if abs(v) < 0.00001:
-                        v = 0.00001
-                    self.lines.loc[linename, 'flowI_{}'.format(phase)] = np.conjugate(s / v) * 1.e3
-                    # complex power in kVA (bus1 --> bus2)
-                    self.lines.loc[linename, 'flowS_{}'.format(phase)] = s
-                    ii = ii + 1
+                        # complex current in amps (bus1 --> bus2)
+                        if abs(v) < 0.00001:
+                            v = 0.00001
+                        self.lines.loc[linename, 'flowI_{}'.format(phase)] = np.conjugate(s / v) * 1.e3
+                        # complex power in kVA (bus1 --> bus2)
+                        self.lines.loc[linename, 'flowS_{}'.format(phase)] = s
+                        ii = ii + 1
         return self.lines
 
     def set_source_voltage(self, v_pu: float) -> None:

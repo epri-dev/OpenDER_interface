@@ -167,7 +167,7 @@ class XYPlots:
         """
         plt.show()
 
-    def __calc_Q(self, value: float) -> float:
+    def __calc_S(self, value: float) -> float:
         """
         If self.pu is True, return pu value based on nameplate apparent power rating. If False, return kVAR value.
 
@@ -180,7 +180,7 @@ class XYPlots:
 
     def __calc_P(self, value: float) -> float:
         """
-       If self.pu is True, return pu value based on nameplate apparent power rating. If False, return kW value.
+        If self.pu is True, return pu value based on nameplate apparent power rating. If False, return kW value.
 
         :param value: active power in pu of nameplate active power rating, considering the difference of charging and discharging
         """
@@ -210,8 +210,8 @@ class XYPlots:
         self.plot_element = []
 
         # Draw XY axis
-        self.plot_element.append(self.ax_pq.plot([0, 0], [-self.__calc_Q(1), self.__calc_Q(1)], color='grey'))
-        self.plot_element.append(self.ax_pq.plot([-self.__calc_Q(1), self.__calc_Q(1)], [0, 0], color='grey'))
+        self.plot_element.append(self.ax_pq.plot([0, 0], [-self.__calc_S(1), self.__calc_S(1)], color='grey'))
+        self.plot_element.append(self.ax_pq.plot([-self.__calc_S(1), self.__calc_S(1)], [0, 0], color='grey'))
 
         # Draw VA circle
         theta1 = np.linspace(-np.pi / 2, np.pi / 2, 100)
@@ -230,18 +230,18 @@ class XYPlots:
         self.plot_element.append(self.ax_pq.plot(x3, x4, color='red'))
 
         # Draw P max
-        self.plot_element.append(self.ax_pq.plot([self.__calc_P(1), self.__calc_P(1)], [-self.__calc_Q(1), self.__calc_Q(1)], color='green', label="P Max"))
+        self.plot_element.append(self.ax_pq.plot([self.__calc_P(1), self.__calc_P(1)], [-self.__calc_S(1), self.__calc_S(1)], color='green', label="P Max"))
         if type(self.der_obj) is opender.DER_BESS:
-            self.plot_element.append(self.ax_pq.plot([self.__calc_P(-1), self.__calc_P(-1)], [-self.__calc_Q(1), self.__calc_Q(1)], color='green'))
+            self.plot_element.append(self.ax_pq.plot([self.__calc_P(-1), self.__calc_P(-1)], [-self.__calc_S(1), self.__calc_S(1)], color='green'))
 
         # Draw Q requirements by IEEE 1547-2018
-        self.plot_element.append(self.ax_pq.plot([self.__calc_P(0.2), self.__calc_Q(1)],
-                                                 [self.__calc_Q(0.44), self.__calc_Q(0.44)], color='pink', label="Q Cap Req (Cat_B)"))
+        self.plot_element.append(self.ax_pq.plot([self.__calc_P(0.2), self.__calc_S(1)],
+                                                 [self.__calc_S(0.44), self.__calc_S(0.44)], color='pink', label="Q Cap Req (Cat_B)"))
         self.plot_element.append(self.ax_pq.plot([self.__calc_P(0.05), self.__calc_P(0.2)],
-                                                 [self.__calc_Q(0.11), self.__calc_Q(0.44)], color='pink'))
+                                                 [self.__calc_S(0.11), self.__calc_S(0.44)], color='pink'))
 
-        self.plot_element.append(self.ax_pq.plot([self.__calc_P(0.2), self.__calc_Q(1)], [self.__calc_Q(-0.44), self.__calc_Q(-0.44)], color='pink'))
-        self.plot_element.append(self.ax_pq.plot([self.__calc_P(0.05), self.__calc_P(0.2)], [self.__calc_Q(-0.11), self.__calc_Q(-0.44)], color='pink'))
+        self.plot_element.append(self.ax_pq.plot([self.__calc_P(0.2), self.__calc_S(1)], [self.__calc_S(-0.44), self.__calc_S(-0.44)], color='pink'))
+        self.plot_element.append(self.ax_pq.plot([self.__calc_P(0.05), self.__calc_P(0.2)], [self.__calc_S(-0.11), self.__calc_S(-0.44)], color='pink'))
 
         # Draw DER Q capability
         k=8
@@ -249,19 +249,19 @@ class XYPlots:
         for i in range(len(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_INJ_PU']) - 1):
             k = k + 1
             self.plot_element.append(self.ax_pq.plot(
-                [self.__calc_P(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_INJ_PU'][i]),
-                 self.__calc_P(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_INJ_PU'][i + 1])],
-                [self.__calc_Q(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_INJ_PU'][i]),
-                 self.__calc_Q(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_INJ_PU'][i + 1])], color='black'))
+                [self.__calc_S(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_INJ_PU'][i]),
+                 self.__calc_S(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_INJ_PU'][i + 1])],
+                [self.__calc_S(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_INJ_PU'][i]),
+                 self.__calc_S(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_INJ_PU'][i + 1])], color='black'))
 
         # Q absorption capability
         for i in range(len(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_ABS_PU']) - 1):
             k = k + 1
             self.plot_element.append(self.ax_pq.plot(
-                [self.__calc_P(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_ABS_PU'][i]),
-                 self.__calc_P(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_ABS_PU'][i + 1])],
-                [self.__calc_Q(-self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_ABS_PU'][i]),
-                 self.__calc_Q(-self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_ABS_PU'][i + 1])], color='blue'))
+                [self.__calc_S(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_ABS_PU'][i]),
+                 self.__calc_S(self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['P_Q_ABS_PU'][i + 1])],
+                [self.__calc_S(-self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_ABS_PU'][i]),
+                 self.__calc_S(-self.der_obj.der_file.NP_Q_CAPABILITY_BY_P_CURVE['Q_MAX_ABS_PU'][i + 1])], color='blue'))
 
         k=k+2
         self.plot_element.append(self.ax_pq.plot([0, 0], [0, 0], color='black', label="Q Inj Max"))
@@ -271,9 +271,9 @@ class XYPlots:
         self.meas_points = pd.DataFrame(self.meas_points_dict)
 
         for der_obj in self.plot_points:
-            self.ax_pq.scatter(self.__calc_Q(der_obj.p_out_pu),self.__calc_Q(der_obj.q_out_pu), s=90, marker='^', color='blue')
+            self.ax_pq.scatter(self.__calc_S(der_obj.p_out_pu),self.__calc_S(der_obj.q_out_pu), s=90, marker='^', color='blue')
         for i, point in self.meas_points.iterrows():
-            self.ax_pq.scatter(self.__calc_Q(self.meas_points['P'].values[i]), self.__calc_Q(self.meas_points['Q'].values[i]),
+            self.ax_pq.scatter(self.__calc_S(self.meas_points['P'].values[i]), self.__calc_S(self.meas_points['Q'].values[i]),
                                marker='v', s=90, color='orange')
 
         # Draw constant power factor line
@@ -284,8 +284,8 @@ class XYPlots:
             else:
                 sign = -1
 
-            p = self.__calc_Q(pf)
-            q = self.__calc_Q(sign * np.sqrt(1 - pf ** 2))
+            p = self.__calc_S(pf)
+            q = self.__calc_S(sign * np.sqrt(1 - pf ** 2))
 
             if type(self.der_obj) is opender.DER_BESS:
                 self.const_pf_fig_obj, = self.ax_pq.plot([-p, p], [-q, q], color='yellow', label=f"{pf} Power Factor")
@@ -299,16 +299,16 @@ class XYPlots:
             p1 = self.__calc_P(self.der_obj.der_file.QP_CURVE_P1_GEN)
             p2 = self.__calc_P(self.der_obj.der_file.QP_CURVE_P2_GEN)
             p3 = self.__calc_P(self.der_obj.der_file.QP_CURVE_P3_GEN)
-            q1 = self.__calc_Q(self.der_obj.der_file.QP_CURVE_Q1_GEN)
-            q2 = self.__calc_Q(self.der_obj.der_file.QP_CURVE_Q2_GEN)
-            q3 = self.__calc_Q(self.der_obj.der_file.QP_CURVE_Q3_GEN)
+            q1 = self.__calc_S(self.der_obj.der_file.QP_CURVE_Q1_GEN)
+            q2 = self.__calc_S(self.der_obj.der_file.QP_CURVE_Q2_GEN)
+            q3 = self.__calc_S(self.der_obj.der_file.QP_CURVE_Q3_GEN)
             p_1 = self.__calc_P(self.der_obj.der_file.QP_CURVE_P1_LOAD)
             p_2 = self.__calc_P(self.der_obj.der_file.QP_CURVE_P2_LOAD)
             p_3 = self.__calc_P(self.der_obj.der_file.QP_CURVE_P3_LOAD)
-            q_1 = self.__calc_Q(self.der_obj.der_file.QP_CURVE_Q1_LOAD)
-            q_2 = self.__calc_Q(self.der_obj.der_file.QP_CURVE_Q2_LOAD)
-            q_3 = self.__calc_Q(self.der_obj.der_file.QP_CURVE_Q3_LOAD)
-            max = self.__calc_Q(1)
+            q_1 = self.__calc_S(self.der_obj.der_file.QP_CURVE_Q1_LOAD)
+            q_2 = self.__calc_S(self.der_obj.der_file.QP_CURVE_Q2_LOAD)
+            q_3 = self.__calc_S(self.der_obj.der_file.QP_CURVE_Q3_LOAD)
+            max = self.__calc_S(1)
 
             if type(self.der_obj) is opender.DER_BESS:
                 self.qp_curve_fig_obj, = self.ax_pq.plot([-max, p_3, p_2, p_1, p1, p2, p3, max], [q_3, q_3, q_2, q_1, q1, q2, q3, q3], color='orange', label='Watt-var')
@@ -321,7 +321,7 @@ class XYPlots:
         # Draw active power limit line
         if self.der_obj.der_file.AP_LIMIT_ENABLE:
             p = self.__calc_P(self.der_obj.der_file.AP_LIMIT)
-            self.ap_limit_fig_obj, = self.ax_pq.plot([p,p], [-self.__calc_Q(1), self.__calc_Q(1)], color='brown', label='P limit')
+            self.ap_limit_fig_obj, = self.ax_pq.plot([p,p], [-self.__calc_S(1), self.__calc_S(1)], color='brown', label='P limit')
         else:
             self.ap_limit_fig_obj, = self.ax_pq.plot([], [], color='brown', label='')
 
@@ -337,17 +337,17 @@ class XYPlots:
         Prepare plot with x-axis as V and y-axis as Q. Volt-var curve is also plotted based on modeled OpenDER setting
         """
         self.fig_vq, self.ax_vq = plt.subplots(nrows=1, ncols=1)
-        v_curve = np.array([0.89, self.der_file.QV_CURVE_V1, self.der_file.QV_CURVE_V2, self.der_file.QV_CURVE_V3,
-                            self.der_file.QV_CURVE_V4, 1.1])
+        v_curve = np.array([0.85, self.der_file.QV_CURVE_V1, self.der_file.QV_CURVE_V2, self.der_file.QV_CURVE_V3,
+                            self.der_file.QV_CURVE_V4, 1.15])
         q_curve = np.array(
             [self.der_file.QV_CURVE_Q1, self.der_file.QV_CURVE_Q1, self.der_file.QV_CURVE_Q2, self.der_file.QV_CURVE_Q3,
              self.der_file.QV_CURVE_Q4, self.der_file.QV_CURVE_Q4])
 
-        q_curve = [self.__calc_Q(q) for q in q_curve]
+        q_curve = [self.__calc_S(q) for q in q_curve]
         self.ax_vq.plot(v_curve, q_curve, color='red', label='Volt-Var Curve')
 
         for der_obj in self.plot_points:
-            self.ax_vq.scatter(der_obj.der_input.v_meas_pu, self.__calc_Q(der_obj.q_out_pu), marker='^', s=90, color='blue')
+            self.ax_vq.scatter(der_obj.der_input.v_meas_pu, self.__calc_S(der_obj.q_out_pu), marker='^', s=90, color='blue')
 
         if self.meas_points_dict != []:
             self.meas_points = pd.DataFrame(self.meas_points_dict)
@@ -355,7 +355,7 @@ class XYPlots:
             self.meas_points = pd.DataFrame()
 
         for i, point in self.meas_points.iterrows():
-            self.ax_vq.scatter(self.meas_points['V'].values[i], self.__calc_Q(self.meas_points['Q'].values[i]),
+            self.ax_vq.scatter(self.meas_points['V'].values[i], self.__calc_S(self.meas_points['Q'].values[i]),
                                marker='v', s=90, color='orange')
 
         if self.pu:
@@ -386,9 +386,9 @@ class XYPlots:
             self.meas_points = pd.DataFrame()
 
         for der_obj in self.plot_points:
-            self.ax_vp.scatter(der_obj.der_input.v_meas_pu, self.__calc_Q(der_obj.p_out_pu), marker='^', s=90, color='blue')
+            self.ax_vp.scatter(der_obj.der_input.v_meas_pu, self.__calc_S(der_obj.p_out_pu), marker='^', s=90, color='blue')
         for i, point in self.meas_points.iterrows():
-            self.ax_vp.scatter(self.meas_points['V'].values[i], self.__calc_Q(self.meas_points['P'].values[i]),
+            self.ax_vp.scatter(self.meas_points['V'].values[i], self.__calc_S(self.meas_points['P'].values[i]),
                                marker='v', s=90, color='orange')
 
         if self.der_obj.der_file.AP_LIMIT_ENABLE:
@@ -515,19 +515,19 @@ class XYPlots:
 
             f_curve = [f1, f2, 60-self.der_file.PF_DBUF, 60, 60+self.der_file.PF_DBOF, f3, f4]
 
-            p_curve = [self.__calc_Q(p) for p in[p1, p2, p_pre, p_pre, p_pre, p3, p4]]
+            p_curve = [self.__calc_S(p) for p in[p1, p2, p_pre, p_pre, p_pre, p3, p4]]
 
             self.ax_fp.plot(f_curve, p_curve)
 
         # Plot abnormal frequency trip settings
-        self.ax_fp.plot([self.der_file.UF2_TRIP_F, self.der_file.UF2_TRIP_F], [self.__calc_Q(-1.1), self.__calc_Q(1.1)], color='gray', linestyle='--')
-        self.ax_fp.plot([self.der_file.OF2_TRIP_F, self.der_file.OF2_TRIP_F], [self.__calc_Q(-1.1), self.__calc_Q(1.1)], color='gray', linestyle='--')
-        self.ax_fp.plot([self.der_file.UF1_TRIP_F, self.der_file.UF1_TRIP_F], [self.__calc_Q(-1.1), self.__calc_Q(1.1)], color='gray', linestyle='-.')
-        self.ax_fp.plot([self.der_file.OF1_TRIP_F, self.der_file.OF1_TRIP_F], [self.__calc_Q(-1.1), self.__calc_Q(1.1)], color='gray', linestyle='-.')
+        self.ax_fp.plot([self.der_file.UF2_TRIP_F, self.der_file.UF2_TRIP_F], [self.__calc_S(-1.1), self.__calc_S(1.1)], color='gray', linestyle='--')
+        self.ax_fp.plot([self.der_file.OF2_TRIP_F, self.der_file.OF2_TRIP_F], [self.__calc_S(-1.1), self.__calc_S(1.1)], color='gray', linestyle='--')
+        self.ax_fp.plot([self.der_file.UF1_TRIP_F, self.der_file.UF1_TRIP_F], [self.__calc_S(-1.1), self.__calc_S(1.1)], color='gray', linestyle='-.')
+        self.ax_fp.plot([self.der_file.OF1_TRIP_F, self.der_file.OF1_TRIP_F], [self.__calc_S(-1.1), self.__calc_S(1.1)], color='gray', linestyle='-.')
 
         # Plot OpenDER outputs
         for der_obj in self.plot_points:
-            self.ax_fp.scatter(der_obj.der_input.freq_hz, self.__calc_Q(der_obj.p_out_pu), marker='^', s=90, color='blue')
+            self.ax_fp.scatter(der_obj.der_input.freq_hz, self.__calc_S(der_obj.p_out_pu), marker='^', s=90, color='blue')
 
         # Plot measured points
         if self.meas_points_dict != []:
@@ -536,8 +536,8 @@ class XYPlots:
             self.meas_points = pd.DataFrame()
 
         for i, point in self.meas_points.iterrows():
-            self.ax_fp.scatter(self.meas_points['F'].values[i], self.__calc_Q(self.meas_points['P'].values[i]),
-                               marker='v', s=90, color='purple')
+            self.ax_fp.scatter(self.meas_points['F'].values[i], self.__calc_S(self.meas_points['P'].values[i]),
+                               marker='v', s=90, color='orange')
 
         self.ax_fp.legend(loc=1)
         # self.ax_fp.set_ylim(0, 1.05)
@@ -572,7 +572,7 @@ class XYPlots:
     #
     #     self.point_hollow.remove()
     #     self.point_hollow = self.ax_pq.scatter(self.__calc_P(self.plot_points[i].p_desired_pu),
-    #                                            self.__calc_Q(self.plot_points[i].q_desired_pu), s=80,
+    #                                            self.__calc_S(self.plot_points[i].q_desired_pu), s=80,
     #                                            facecolors='none', edgecolors='green')
     #     # print_der(self.const_pf_fig_obj)
     #     v = self.plot_points[i].der_input.v_meas_pu
